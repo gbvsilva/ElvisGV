@@ -1,4 +1,6 @@
 ElvisGV
 =======
 
-Editor leve vetorial com saída em SVG (Autores: Graco e Vinícius)
+Editor leve vetorial com saída em SVG
+
+Autores: Graco Babeuf e Vinícius Petch
