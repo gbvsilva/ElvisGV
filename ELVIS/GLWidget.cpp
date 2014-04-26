@@ -2,6 +2,9 @@
 #include <GL/glu.h>
 #include "GLWidget.h"
 #include "stdio.h"
+#include <iostream>
+float posX = 0;
+float posY = 0;
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
@@ -28,9 +31,12 @@ void GLWidget::resizeGL(int w, int h) {
 }
 
 void GLWidget::paintGL() {
+    glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
+
     glColor3f(1,0,0);
     glBegin(GL_POLYGON);
+    glVertex2f(posX, posY);
     glVertex2f(30,10);
     glVertex2f(100,500);
     glVertex2f(500,100);
@@ -39,6 +45,9 @@ void GLWidget::paintGL() {
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {
     printf("Clicou!\n");
+    posX = event->x();
+    posY = event->y();
+    paintGL();
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
