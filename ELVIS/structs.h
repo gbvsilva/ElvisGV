@@ -6,12 +6,20 @@ struct vertex{
     float y;
 };
 struct line{
-    line* next = NULL;
+    line* next;
     vertex v1, v2;
+	line() {
+		next=NULL;
+	}
 };
 struct obj{
-    obj* next = NULL;
-    line* firstLine = NULL;
-    line* lastLine = NULL;
+    obj* next;
+    line* firstLine;
+    line* lastLine;
+	obj() {
+		next=NULL;
+		firstLine=NULL;
+		lastLine=NULL;
+	}
 };
 #endif
