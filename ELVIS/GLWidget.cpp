@@ -65,7 +65,7 @@ void GLWidget::paintGL() {
 	    linePt = linePt->next;
 	}
 	objPt = objPt->next;
-    }
+   }
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {
@@ -101,7 +101,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    last->lastLine->v1.y = pos1Y;
 	    last->lastLine->v2.x = pos2X;
 	    last->lastLine->v2.y = pos2Y;
-	    // paintGL();
 	    updateGL();
 	    lineCounter--;
 	    if(lineCounter == 0){
