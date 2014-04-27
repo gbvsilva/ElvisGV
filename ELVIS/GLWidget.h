@@ -6,11 +6,16 @@
 class GLWidget : public QGLWidget
 {
     Q_OBJECT
-
-public:
+	public slots:
+	void mouseClick();
+    void mouseMovement();
+signals:
+    void mouseClicked();
+    void mouseMoved();
+    public:
     explicit GLWidget(QWidget *parent = NULL);
 
-protected:
+    protected:
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
@@ -18,9 +23,9 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
 
-/*signals:
+    /*signals:
 
-public slots: */
+      public slots: */
 
 };
 
