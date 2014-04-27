@@ -5,21 +5,23 @@ struct vertex{
     float x;
     float y;
 };
+
 struct line{
     line* next;
     vertex v1, v2;
-	line() {
-		next=NULL;
-	}
+    line() {
+        next=NULL;
+    }
 };
+
 struct obj{
-    obj* next;
+    obj *next;
     line* firstLine;
     line* lastLine;
-	obj() {
-		next=NULL;
-		firstLine=NULL;
-		lastLine=NULL;
-	}
+    obj() {
+        next=NULL;
+        firstLine=NULL;
+        lastLine=NULL;
+    }
 };
 #endif

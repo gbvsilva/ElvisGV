@@ -12,9 +12,9 @@ TARGET = ELVIS
 TEMPLATE = app
 
 
-SOURCES += main.cpp \
+SOURCES += main.cpp\
     GLWidget.cpp \
-	drawFunctions.cpp
+    drawFunctions.cpp
 
 HEADERS  += \
     GLWidget.h \

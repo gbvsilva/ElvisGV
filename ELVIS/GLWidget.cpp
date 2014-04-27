@@ -58,15 +58,15 @@ void GLWidget::paintGL() {
     line* linePt;
     objPt = head;
     while(objPt != NULL){
-	linePt = objPt->firstLine;
-	while(linePt != NULL){
-	    glBegin(GL_LINES);
-	    glVertex2f(linePt->v1.x, linePt->v1.y);
-	    glVertex2f(linePt->v2.x, linePt->v2.y);
-	    glEnd();
-	    linePt = linePt->next;
-	}
-	objPt = objPt->next;
+        linePt = objPt->firstLine;
+        while(linePt != NULL){
+            glBegin(GL_LINES);
+            glVertex2f(linePt->v1.x, linePt->v1.y);
+            glVertex2f(linePt->v2.x, linePt->v2.y);
+            glEnd();
+            linePt = linePt->next;
+        }
+        objPt = objPt->next;
     }
 }
 
@@ -78,37 +78,37 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     pos2X = event->x();
     pos2Y = mouseH - event->y();
     if(click == false){
-	click = true;
-	lineCounter = lineSize;
+        click = true;
+        lineCounter = lineSize;
     }
     else{
-	if(head == NULL){
-	    head = new obj();
-	    last = head;
-	}
-	else{
-	    last->next = new obj();
-	    last = last->next;
-	}
-	if(last->firstLine == NULL){
-	    last->firstLine = new line();
-	    last->lastLine = last->firstLine; 
-	}
-	else{
-	    last->lastLine->next = new line();
-	    last->lastLine = last->lastLine->next;
-	}
-	last->lastLine->v1.x = pos1X;
-	last->lastLine->v1.y = pos1Y;
-	last->lastLine->v2.x = pos2X;
-	last->lastLine->v2.y = pos2Y;
-	paintGL();
-	updateGL();
-	lineCounter--;
-	if(lineCounter == 0){
-	    click = false;
-	    lineCounter = 0;
-	}
+        if(head == NULL){
+            head = new obj();
+            last = head;
+        }
+        else{
+            last->next = new obj();
+            last = last->next;
+        }
+        if(last->firstLine == NULL){
+            last->firstLine = new line();
+            last->lastLine = last->firstLine;
+        }
+        else{
+            last->lastLine->next = new line();
+            last->lastLine = last->lastLine->next;
+        }
+        last->lastLine->v1.x = pos1X;
+        last->lastLine->v1.y = pos1Y;
+        last->lastLine->v2.x = pos2X;
+        last->lastLine->v2.y = pos2Y;
+        paintGL();
+        updateGL();
+        lineCounter--;
+        if(lineCounter == 0){
+            click = false;
+            lineCounter = 0;
+        }
     }
 }
 
@@ -126,11 +126,11 @@ void GLWidget::mouseMovement(){
 }
 void GLWidget::keyPressEvent(QKeyEvent* event) {
     switch(event->key()) {
-	case Qt::Key_Escape:
-	    close();
-	    break;
-	default:
-	    event->ignore();
-	    break;
+    case Qt::Key_Escape:
+        close();
+        break;
+    default:
+        event->ignore();
+        break;
     }
 }
