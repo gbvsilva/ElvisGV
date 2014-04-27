@@ -4,15 +4,25 @@
 #include "stdio.h"
 #include <iostream>
 
+// Comando a ser executado
+int command = 0;
+// Quantidade de linhas que falta serem desenhadas
+int lineCounter = 0;
+// Quantidade de linhas de uma polilinha
+int lineSize = 2;
+// Posição anterior e atual que o mouse clicou, respectivamente
 float pos1X = 0;
 float pos1Y = 0;
 float pos2X = 0;
 float pos2Y = 0;
+// Clique inicial
 bool click = false;
+// Ponteiro da cabeça da lista encadeada
 struct obj* head = NULL;
+// Ponteiro da cauda da lista encadeada
 struct obj* last = NULL;
 
-
+// Vértice, linha, objeto, respectivamente
 struct vertex{
     float x;
     float y;
@@ -24,6 +34,7 @@ struct line{
 struct obj{
     obj* next = NULL;
     line* firstLine = NULL;
+    line* lastLine = NULL;
 };
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
@@ -54,14 +65,19 @@ void GLWidget::paintGL() {
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f(1,0,0);
-    obj* pointer;
-    pointer = head;
-    while(pointer != NULL){
-	glBegin(GL_LINES);
-	glVertex2f(pointer->firstLine->v1.x, pointer->firstLine->v1.y);
-	glVertex2f(pointer->firstLine->v2.x, pointer->firstLine->v2.y);
-	glEnd();
-	pointer = pointer->next;
+    obj* objPt;
+    line* linePt;
+    objPt = head;
+    while(objPt != NULL){
+	linePt = objPt->firstLine;
+	while(linePt != NULL){
+	    glBegin(GL_LINES);
+	    glVertex2f(linePt->v1.x, linePt->v1.y);
+	    glVertex2f(linePt->v2.x, linePt->v2.y);
+	    glEnd();
+	    linePt = linePt->next;
+	}
+	objPt = objPt->next;
     }
 }
 
@@ -72,30 +88,37 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     pos1Y = pos2Y;
     pos2X = event->x();
     pos2Y = event->y();
-    if(click == false) click = true;
+    if(click == false){
+	click = true;
+	lineCounter = lineSize;
+    }
     else{
-	click = false;
 	if(head == NULL){
 	    head = new obj();
 	    last = head;
-	    head->firstLine = new line();
-	    head->firstLine->v1.x = pos1X;
-	    head->firstLine->v1.y = pos1Y;
-	    head->firstLine->v2.x = pos2X;
-	    head->firstLine->v2.y = pos2Y;
-	    paintGL();
-	    updateGL();
 	}
 	else{
 	    last->next = new obj();
 	    last = last->next;
+	}
+	if(last->firstLine == NULL){
 	    last->firstLine = new line();
-	    last->firstLine->v1.x = pos1X;
-	    last->firstLine->v1.y = pos1Y;
-	    last->firstLine->v2.x = pos2X;
-	    last->firstLine->v2.y = pos2Y;
-	    paintGL();
-	    updateGL();
+	    last->lastLine = last->firstLine; 
+	}
+	else{
+	    last->lastLine->next = new line();
+	    last->lastLine = last->lastLine->next;
+	}
+	last->lastLine->v1.x = pos1X;
+	last->lastLine->v1.y = pos1Y;
+	last->lastLine->v2.x = pos2X;
+	last->lastLine->v2.y = pos2Y;
+	paintGL();
+	updateGL();
+	lineCounter--;
+	if(lineCounter == 0){
+	    click = false;
+	    lineCounter = 0;
 	}
     }
 }
