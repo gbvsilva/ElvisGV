@@ -75,24 +75,28 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     if(click == false) click = true;
     else{
 	click = false;
-    if(head == NULL){
+	if(head == NULL){
 	    head = new obj();
-        last = head;
+	    last = head;
 	    head->firstLine = new line();
 	    head->firstLine->v1.x = pos1X;
 	    head->firstLine->v1.y = pos1Y;
 	    head->firstLine->v2.x = pos2X;
-        head->firstLine->v2.y = pos2Y;
+	    head->firstLine->v2.y = pos2Y;
+	    paintGL();
+	    updateGL();
 	}
-    else{
-        last->next = new obj();
-        last = last->next;
-        last->firstLine = new line();
-        last->firstLine->v1.x = pos1X;
-        last->firstLine->v1.y = pos1Y;
-        last->firstLine->v2.x = pos2X;
-        last->firstLine->v2.y = pos2Y;
-    }
+	else{
+	    last->next = new obj();
+	    last = last->next;
+	    last->firstLine = new line();
+	    last->firstLine->v1.x = pos1X;
+	    last->firstLine->v1.y = pos1Y;
+	    last->firstLine->v2.x = pos2X;
+	    last->firstLine->v2.y = pos2Y;
+	    paintGL();
+	    updateGL();
+	}
     }
 }
 
