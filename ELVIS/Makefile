@@ -46,9 +46,11 @@ OBJECTS_DIR   = ./
 ####### Files
 
 SOURCES       = main.cpp \
-		GLWidget.cpp moc_GLWidget.cpp
+		GLWidget.cpp \
+		drawFunctions.cpp moc_GLWidget.cpp
 OBJECTS       = main.o \
 		GLWidget.o \
+		drawFunctions.o \
 		moc_GLWidget.o
 DIST          = ../../Qt/5.2.1/gcc_64/mkspecs/features/spec_pre.prf \
 		../../Qt/5.2.1/gcc_64/mkspecs/common/shell-unix.conf \
@@ -408,7 +410,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/ELVIS1.0.0 || mkdir -p .tmp/ELVIS1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents GLWidget.h .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents main.cpp GLWidget.cpp .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents mainwindow.ui .tmp/ELVIS1.0.0/ && (cd `dirname .tmp/ELVIS1.0.0` && $(TAR) ELVIS1.0.0.tar ELVIS1.0.0 && $(COMPRESS) ELVIS1.0.0.tar) && $(MOVE) `dirname .tmp/ELVIS1.0.0`/ELVIS1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/ELVIS1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents GLWidget.h drawFunctions.h structs.h .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents main.cpp GLWidget.cpp drawFunctions.cpp .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents mainwindow.ui .tmp/ELVIS1.0.0/ && (cd `dirname .tmp/ELVIS1.0.0` && $(TAR) ELVIS1.0.0.tar ELVIS1.0.0 && $(COMPRESS) ELVIS1.0.0.tar) && $(MOVE) `dirname .tmp/ELVIS1.0.0`/ELVIS1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/ELVIS1.0.0
 
 
 clean:compiler_clean 
@@ -794,6 +796,7 @@ GLWidget.o: GLWidget.cpp ../../Qt/5.2.1/gcc_64/include/QtGui/QMouseEvent \
 		../../Qt/5.2.1/gcc_64/include/QtCore/qfiledevice.h \
 		../../Qt/5.2.1/gcc_64/include/QtGui/qvector2d.h \
 		../../Qt/5.2.1/gcc_64/include/QtGui/qtouchdevice.h \
+		drawFunctions.h \
 		GLWidget.h \
 		../../Qt/5.2.1/gcc_64/include/QtOpenGL/QGLWidget \
 		../../Qt/5.2.1/gcc_64/include/QtOpenGL/qgl.h \
@@ -829,8 +832,13 @@ GLWidget.o: GLWidget.cpp ../../Qt/5.2.1/gcc_64/include/QtGui/QMouseEvent \
 		../../Qt/5.2.1/gcc_64/include/QtOpenGL/qglcolormap.h \
 		../../Qt/5.2.1/gcc_64/include/QtOpenGL/qtopenglglobal.h \
 		../../Qt/5.2.1/gcc_64/include/QtGui/QSurfaceFormat \
-		../../Qt/5.2.1/gcc_64/include/QtGui/qsurfaceformat.h
+		../../Qt/5.2.1/gcc_64/include/QtGui/qsurfaceformat.h \
+		structs.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLWidget.o GLWidget.cpp
+
+drawFunctions.o: drawFunctions.cpp structs.h \
+		drawFunctions.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o drawFunctions.o drawFunctions.cpp
 
 moc_GLWidget.o: moc_GLWidget.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_GLWidget.o moc_GLWidget.cpp

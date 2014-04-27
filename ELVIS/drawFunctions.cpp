@@ -1,4 +1,6 @@
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <GL/glu.h>
 #include "structs.h"
 #include "drawFunctions.h"
@@ -6,8 +8,7 @@
 void bresenham( float x1, float y1, float x2, float y2 ) {
     vertex p1, p2;
     long dist;
-    float m;
-    int i, j, k, varX, varY, x, y, pk;	
+    int i, varX, varY, x, y, pk;
     p1.x = round( x1 );
     p1.y = round( y1 );
     p2.x = round( x2 );
