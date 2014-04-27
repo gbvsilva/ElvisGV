@@ -1,8 +1,9 @@
 #include <QtGui/QMouseEvent>
 #include <GL/glu.h>
+#include <iostream>
 #include "GLWidget.h"
 #include "stdio.h"
-#include <iostream>
+#include "structs.h"
 
 // Comando a ser executado
 int command = 0;
@@ -17,25 +18,12 @@ float pos2X = 0;
 float pos2Y = 0;
 // Clique inicial
 bool click = false;
+// Valor necessário para corrigir o mouse
+int mouseH = 0;
 // Ponteiro da cabeça da lista encadeada
 struct obj* head = NULL;
 // Ponteiro da cauda da lista encadeada
 struct obj* last = NULL;
-
-// Vértice, linha, objeto, respectivamente
-struct vertex{
-    float x;
-    float y;
-};
-struct line{
-    line* next = NULL;
-    vertex v1, v2;
-};
-struct obj{
-    obj* next = NULL;
-    line* firstLine = NULL;
-    line* lastLine = NULL;
-};
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
@@ -53,6 +41,7 @@ void GLWidget::initializeGL() {
 }
 
 void GLWidget::resizeGL(int w, int h) {
+    mouseH = h;
     glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -87,7 +76,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     pos1X = pos2X;
     pos1Y = pos2Y;
     pos2X = event->x();
-    pos2Y = event->y();
+    pos2Y = mouseH - event->y();
     if(click == false){
 	click = true;
 	lineCounter = lineSize;
