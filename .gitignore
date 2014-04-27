@@ -1,2 +1,4 @@
 *.log
 *.java
+*.o
+Makefile
