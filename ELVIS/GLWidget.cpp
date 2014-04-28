@@ -54,11 +54,13 @@ void GLWidget::paintGL() {
     obj* objPt;
     line* linePt;
     circle* c;
+    elipse* elip;
 
     objPt = head;
     while(objPt != NULL){
         linePt = objPt->firstLine;
         c = objPt->c;
+        elip=objPt->elip;
 
         /* Desenhando objetos com suas respectivas cores */
         glColor3f(objPt->r, objPt->g, objPt->b);
@@ -74,6 +76,8 @@ void GLWidget::paintGL() {
         }
         else if(c != NULL) {
             midPtCircle(c->center.x,c->center.y, c->radius);
+        }else if(elip != NULL) {
+            midPtElipse(elip->center.x, elip->center.y, elip->rx, elip->ry);
         }
         objPt = objPt->next;
     }
@@ -81,11 +85,12 @@ void GLWidget::paintGL() {
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {
     mouseClick();
-    printf("Clicou!\n");
-    /* Desenhar linha */
+
+    /* Desenhar LINHA */
     if(OPTION == 1) {
+
+        /* FALTA DECLARAR O CASO DE ABORTAR A CRIACAO DA LINHA */
         if(event->button() == Qt::LeftButton) {
-            printf("LEFT_BUTTON\n");
             if(click==false) {
                 pos1X = event->x();
                 pos1Y = mouseH - event->y();
@@ -98,24 +103,19 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                 pos2X = event->x();
                 pos2Y = mouseH - event->y();
             }
-            /*if(click == false){
-                click = true;
-                lineCounter = lineSize;
-            }
-            else{*/
+
             if(head == NULL){
-                printf("LEFT_BUTTON2\n");
+
                 head = new obj();
                 last = head;
             }
             else{
-                printf("LEFT_BUTTON3\n");
                 last->next = new obj();
                 last = last->next;
             }
-            printf("LEFT_BUTTON4\n");
+
             if(last->firstLine == NULL){
-                printf("LEFT_BUTTON5\n");
+
                 last->firstLine = new line();
                 last->lastLine = last->firstLine;
             }
@@ -123,26 +123,20 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                 last->lastLine->next = new line();
                 last->lastLine = last->lastLine->next;
             }
-            printf("LEFT_BUTTON6\n");
-            printf("%i, %i, %i, %i\n", pos1X, pos1Y, pos2X, pos2Y);
+
             last->lastLine->v1.x = pos1X;
             last->lastLine->v1.y = pos1Y;
             last->lastLine->v2.x = pos2X;
             last->lastLine->v2.y = pos2Y;
-            printf("LEFT_BUTTON7\n");
+
             updateGL();
-            printf("LEFT_BUTTON7\n");
-            /*lineCounter--;
-                if(lineCounter == 0){
-                    click = false;
-                    lineCounter = 0;
-                }*/
+
+
         }else if(event->button() == Qt::MiddleButton) {
-            printf("MIDDLE BUTTON\n");
             click=false;
         }
     }
-    /* Desenhar circulo */
+    /* Desenhar CIRCULO */
     else if(OPTION==2) {
 
         if(click == false) {
@@ -166,12 +160,42 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             pos2X = event->x();
             pos2Y = mouseH - event->y();
             last->c->radius = sqrt(pow((pos2X - pos1X), 2) + pow((pos2Y - pos1Y), 2));
-            //paintGL();
+
             updateGL();
             click=false;
         }
     }
-    else if(OPTION == 3){
+    /* Desenhar ELIPSE */
+    else if(OPTION == 3) {
+        if(event->button() == Qt::LeftButton) {
+            if(click==false) {
+                click=true;
+                pos1X = event->x();
+                pos1Y = mouseH - event->y();
+
+                if(head==NULL) {
+                    head = new obj();
+                    last=head;
+                }else {
+                    last->next = new obj();
+                    last = last->next;
+                }
+
+                last->elip = new elipse();
+                last->elip->center.x=pos1X;
+                last->elip->center.y=pos1Y;
+            }else {
+                pos2X = event->x();
+                pos2Y = mouseH - event->y();
+                last->elip->rx = pos2X - pos1X;
+                last->elip->ry = pos2Y - pos1Y;
+                updateGL();
+                click=false;
+            }
+        }
+    }
+    /* Operacao de CLIPPING */
+    else if(OPTION == 8){
         printf("Comando 2\n");
         obj* objPt;
         line* linePt;
@@ -211,7 +235,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                         objPt->r = 1;
                         printf("Linha encontrada\n");
                     }
-                    paintGL();
+
                     updateGL();
                     linePt = linePt->next;
                 }
@@ -232,6 +256,11 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
             last->lastLine->v2.y = mouseH - event->y();
         }else if(OPTION==2) {
             last->c->radius = sqrt(pow((event->x() - pos1X), 2) + pow(((mouseH - event->y()) - pos1Y), 2));
+        }else if(OPTION==3) {
+            pos2X=event->x();
+            pos2Y=mouseH - event->y();
+            last->elip->rx = pos2X - pos1X;
+            last->elip->ry = pos2Y - pos1Y;
         }
         updateGL();
     }
@@ -255,6 +284,9 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
         break;
     case Qt::Key_2:
         OPTION=2;
+        break;
+    case Qt::Key_3:
+        OPTION=3;
         break;
     default:
         event->ignore();

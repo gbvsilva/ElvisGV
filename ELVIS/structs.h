@@ -22,11 +22,20 @@ struct circle{
     }
 };
 
+struct elipse {
+    int rx, ry;
+    vertex center;
+    elipse() {
+        rx=ry=0;
+    }
+};
+
 struct obj{
     obj* next;
     line* firstLine;
     line* lastLine;
     circle* c;
+    elipse* elip;
     int type;
     int layer;
     float r;
@@ -37,6 +46,7 @@ struct obj{
         firstLine = NULL;
         lastLine = NULL;
         c=NULL;
+        elip=NULL;
         r = 0;
         g = 0;
         b = 0;
