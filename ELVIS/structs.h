@@ -2,8 +2,8 @@
 #define STRUCTS_H
 // Vértice, linha, objeto, respectivamente
 struct vertex{
-    float x;
-    float y;
+    int x;
+    int y;
 };
 
 struct line{
@@ -14,14 +14,24 @@ struct line{
     }
 };
 
+struct circle{
+    int radius;
+    vertex center;
+    circle() {
+        radius=10.0;
+    }
+};
+
 struct obj{
     obj *next;
     line* firstLine;
     line* lastLine;
+    circle* c;
     obj() {
         next=NULL;
         firstLine=NULL;
         lastLine=NULL;
+        c=NULL;
     }
 };
 #endif

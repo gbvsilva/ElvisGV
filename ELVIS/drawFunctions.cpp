@@ -5,10 +5,10 @@
 #include "structs.h"
 #include "drawFunctions.h"
 
-void bresenham( float x1, float y1, float x2, float y2 ) {
+void bresenham( int x1, int y1, int x2, int y2 ) {
     vertex p1, p2;
     long dist;
-    float m;
+    int m;
     int i, j, k, varX, varY, x, y, pk;
     p1.x = round( x1 );
     p1.y = round( y1 );
@@ -276,3 +276,59 @@ void bresenham( float x1, float y1, float x2, float y2 ) {
         }
     }
 }
+
+void midPtCircle(int xc, int yc, int r) {
+    int x=0;
+    int y = r;
+    int p = 1 - r;
+    void circlePlotPoints(int, int, int, int);
+
+    circlePlotPoints(x, y, xc, yc);
+
+    while(x < y) {
+        ++x;
+        if(p < 0)
+            p += 2 * x + 1;
+        else {
+            --y;
+            p += 2 * (x-y) + 1;
+        }
+        circlePlotPoints(x,y,xc,yc);
+    }
+}
+
+
+void circlePlotPoints(int x, int y, int xc, int yc) {
+    glBegin(GL_POINTS);
+    glVertex2i( xc + x, yc + y );
+    glEnd( );
+
+    glBegin(GL_POINTS);
+    glVertex2i( xc - x, yc + y );
+    glEnd( );
+
+    glBegin(GL_POINTS);
+    glVertex2i( xc + x, yc - y );
+    glEnd( );
+
+    glBegin(GL_POINTS);
+    glVertex2i( xc - x, yc - y );
+    glEnd( );
+
+    glBegin(GL_POINTS);
+    glVertex2i( xc + y, yc + x );
+    glEnd( );
+
+    glBegin(GL_POINTS);
+    glVertex2i( xc - y, yc + x );
+    glEnd( );
+
+    glBegin(GL_POINTS);
+    glVertex2i( xc + y, yc - x );
+    glEnd( );
+
+    glBegin(GL_POINTS);
+    glVertex2i( xc - y, yc - x );
+    glEnd( );
+}
+
