@@ -9,8 +9,8 @@ struct vertex{
 struct line{
     line* next;
     vertex v1, v2;
-    line() {
-        next=NULL;
+    line(){
+        next = NULL;
     }
 };
 
@@ -23,15 +23,23 @@ struct circle{
 };
 
 struct obj{
-    obj *next;
+    obj* next;
     line* firstLine;
     line* lastLine;
     circle* c;
-    obj() {
-        next=NULL;
-        firstLine=NULL;
-        lastLine=NULL;
+    int type;
+    int layer;
+    float r;
+    float g;
+    float b;
+    obj(){
+        next = NULL;
+        firstLine = NULL;
+        lastLine = NULL;
         c=NULL;
+        r = 0;
+        g = 0;
+        b = 0;
     }
 };
 #endif

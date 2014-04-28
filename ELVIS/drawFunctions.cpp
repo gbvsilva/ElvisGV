@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <GL/glu.h>
 #include "structs.h"
@@ -8,13 +8,11 @@
 void bresenham( int x1, int y1, int x2, int y2 ) {
     vertex p1, p2;
     long dist;
-    int m;
-    int i, j, k, varX, varY, x, y, pk;
+    int i, varX, varY, x, y, pk;
     p1.x = round( x1 );
     p1.y = round( y1 );
     p2.x = round( x2 );
     p2.y = round( y2 );
-
     // Casos triviais
     // 0°
     if(p1.y == p2.y){
