@@ -61,9 +61,8 @@ void GLWidget::paintGL() {
 	linePt = objPt->firstLine;
 	c = objPt->c;
 	elip=objPt->elip;
-
-	/* Desenhando objetos com suas respectivas cores */
 	glColor3f(objPt->r, objPt->g, objPt->b);
+	/* Desenhando objetos com suas respectivas cores */
 	if(linePt != NULL) {
 	    linePt = objPt->firstLine;
 	    while(linePt != NULL) {
