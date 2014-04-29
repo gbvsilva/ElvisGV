@@ -200,7 +200,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	bool xcross = false;
 	objPt = head;
 	float m;
-	int x0, y0, x1, y1;
+	int x0, y0, x1, y1, clipSize;
+	clipSize = 8;
 
 	pos1X = event->x();
 	pos1Y = mouseH - event->y();
@@ -232,12 +233,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			    y1 = linePt->v2.y;
 			}
 			m = (float)(y1-y0)/(float)(x1-x0);
-			printf("%i + %f*(%i - %i - %i) > %i\n", y0, m, pos1X, 2, x0, pos1Y-2);
 			found = false;
-			if(y0 + m*(pos1X - 2 - x0) > pos1Y - 2 && y0 + m*(pos1X - 2 - x0) < pos1Y + 2) found  = true;
-			else if(y0 + m*(pos1X + 2 - x0) > pos1Y - 2 && y0 + m*(pos1X + 2 - x0) < pos1Y + 2) found = true;
-			else if(x0 + 1/m*(pos1Y - 2 - y0) > pos1X - 2 && x0 + 1/m*(pos1Y - 2 - y0) < pos1X + 2) found = true;
-			else if(x0 + 1/m*(pos1Y + 2 - y0) > pos1X - 2 && x0 + 1/m*(pos1Y + 2 - y0) < pos1X + 2) found = true;
+			if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) found  = true;
+			else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) found = true;
+			else if(x0 + 1/m*(pos1Y - clipSize - y0) > pos1X - clipSize && x0 + 1/m*(pos1Y - clipSize - y0) < pos1X + clipSize) found = true;
+			else if(x0 + 1/m*(pos1Y + clipSize - y0) > pos1X - clipSize && x0 + 1/m*(pos1Y + clipSize - y0) < pos1X + clipSize) found = true;
 		    }
 		    if(found == true){
 			objPt->r = 1;
