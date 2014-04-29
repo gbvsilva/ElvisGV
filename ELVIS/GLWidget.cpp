@@ -8,7 +8,7 @@
 #include "drawFunctions.h"
 
 // Opcao da forma de desenho
-int OPTION=1;
+int OPTION = 1;
 // Posição anterior e atual que o mouse clicou, respectivamente
 int pos1X = 0;
 int pos1Y = 0;
@@ -191,6 +191,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	}
     }
     /* Operacao de CLIPPING */
+    else if(OPTION == 4){
+
+    }
     else if(OPTION == 8){
 	obj* objPt;
 	line* linePt;
@@ -272,6 +275,14 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 
+void clean(){
+    click = false;
+    pos1X = 0;
+    pos1Y = 0;
+    pos2X = 0;
+    pos2Y = 0;
+}
+
 void GLWidget::mouseClick(){
     emit mouseClicked();
 }
@@ -287,15 +298,19 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
 	case Qt::Key_1:
 	    OPTION=1;
+	    clean();
 	    break;
 	case Qt::Key_2:
 	    OPTION=2;
+	    clean();
 	    break;
 	case Qt::Key_3:
 	    OPTION=3;
+	    clean();
 	    break;
 	case Qt::Key_8:
 	    OPTION=8;
+	    clean();
 	    break;
 	default:
 	    event->ignore();
