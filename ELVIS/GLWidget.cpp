@@ -225,22 +225,21 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	last->lastLine->v1.y = pos2Y;
 	last->lastLine->v2.x = pos2X;
 	last->lastLine->v2.y = pos2Y;
-	
+
 	last->lastLine->next = new line();
 	last->lastLine = last->lastLine->next;
 	last->lastLine->v1.x = pos2X;
 	last->lastLine->v1.y = pos2Y;
 	last->lastLine->v2.x = pos2X;
 	last->lastLine->v2.y = pos1Y;
-	
+
 	last->lastLine->next = new line();
 	last->lastLine = last->lastLine->next;
 	last->lastLine->v1.x = pos2X;
 	last->lastLine->v1.y = pos1Y;
 	last->lastLine->v2.x = pos1X;
 	last->lastLine->v2.y = pos1Y;
-	
-	printf("%i\n", last->lastLine->v2.y);
+
 	updateGL();
 	printf("!\n");
     }
@@ -322,7 +321,19 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 	    last->elip->ry = pos2Y - pos1Y;
 	}
 	else if(OPTION == 4){
-	
+	    pos2X = event->x();
+	    pos2Y = mouseH - event->y();
+	    last->firstLine->v2.y = pos2Y;
+	    last->lastLine = last->firstLine->next;
+	    last->lastLine->v1.y = pos2Y;
+	    last->lastLine->v2.x = pos2X;
+	    last->lastLine->v2.y = pos2Y;
+	    last->lastLine = last->lastLine->next;
+	    last->lastLine->v1.x = pos2X;
+	    last->lastLine->v1.y = pos2Y;
+	    last->lastLine->v2.x = pos2X;
+	    last->lastLine = last->lastLine->next;
+	    last->lastLine->v1.x = pos2X;
 	}
 	updateGL();
     }
