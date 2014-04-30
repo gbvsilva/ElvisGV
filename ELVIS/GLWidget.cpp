@@ -69,7 +69,6 @@ void GLWidget::paintGL() {
 		bresenham(linePt->v1.x, linePt->v1.y, linePt->v2.x, linePt->v2.y);
 		linePt = linePt->next;
 	    }
-
 	}
 	else if(c != NULL) {
 	    midPtCircle(c->center.x,c->center.y, c->radius);
@@ -111,7 +110,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 
 	    if(last->firstLine == NULL){
-
 		last->firstLine = new line();
 		last->lastLine = last->firstLine;
 	    }
@@ -124,17 +122,14 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    last->lastLine->v1.y = pos1Y;
 	    last->lastLine->v2.x = pos2X;
 	    last->lastLine->v2.y = pos2Y;
-
 	    updateGL();
-
-
-	}else if(event->button() == Qt::MiddleButton) {
+	}
+	else if(event->button() == Qt::MiddleButton) {
 	    click=false;
 	}
     }
     /* Desenhar CIRCULO */
     else if(OPTION==2) {
-
 	if(click == false) {
 	    click = true;
 	    pos1X = event->x();
@@ -192,7 +187,62 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     /* Operacao de CLIPPING */
     else if(OPTION == 4){
+	printf("!\n");
+	line* aux;
+	if(click == false){
+	    pos1X = event->x();
+	    pos1Y = mouseH - event->y();
+	    pos2X = pos1X;
+	    pos2Y = pos1Y;
+	    click = true;
+	}
+	else{
+	    pos1X = pos2X;
+	    pos1Y = pos2Y;
+	    pos2X = event->x();
+	    pos2Y = mouseH - event->y();
+	    click = false;
+	}
+	printf("!\n");
+	if(head == NULL){
+	    head = new obj();
+	    last = head;
+	}
+	else{
+	    last->next = new obj();
+	    last = last->next;
+	}
+	last->firstLine = new line();
+	last->lastLine = last->firstLine;
+	last->lastLine->v1.x = pos1X;
+	last->lastLine->v1.y = pos1Y;
+	last->lastLine->v2.x = pos1X;
+	last->lastLine->v2.y = pos2Y;
 
+	last->lastLine->next = new line();
+	last->lastLine = last->lastLine->next;
+	last->lastLine->v1.x = pos1X;
+	last->lastLine->v1.y = pos2Y;
+	last->lastLine->v2.x = pos2X;
+	last->lastLine->v2.y = pos2Y;
+	
+	last->lastLine->next = new line();
+	last->lastLine = last->lastLine->next;
+	last->lastLine->v1.x = pos2X;
+	last->lastLine->v1.y = pos2Y;
+	last->lastLine->v2.x = pos2X;
+	last->lastLine->v2.y = pos1Y;
+	
+	last->lastLine->next = new line();
+	last->lastLine = last->lastLine->next;
+	last->lastLine->v1.x = pos2X;
+	last->lastLine->v1.y = pos1Y;
+	last->lastLine->v2.x = pos1X;
+	last->lastLine->v2.y = pos1Y;
+	
+	printf("%i\n", last->lastLine->v2.y);
+	updateGL();
+	printf("!\n");
     }
     else if(OPTION == 8){
 	obj* objPt;
@@ -271,11 +321,15 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 	    last->elip->rx = pos2X - pos1X;
 	    last->elip->ry = pos2Y - pos1Y;
 	}
+	else if(OPTION == 4){
+	
+	}
 	updateGL();
     }
 }
 
 void clean(){
+    printf("!\n");
     click = false;
     pos1X = 0;
     pos1Y = 0;
@@ -306,6 +360,10 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
 	case Qt::Key_3:
 	    OPTION=3;
+	    clean();
+	    break;
+	case Qt::Key_4:
+	    OPTION=4;
 	    clean();
 	    break;
 	case Qt::Key_8:
