@@ -315,6 +315,7 @@ void circlePlotPoints(int x, int y, int xc, int yc) {
 }
 
 void midPtElipse(int xc, int yc, int rx, int ry) {
+    if(ry < 0) ry *= -1;
     int rx2 = rx*rx;
     int ry2 = ry*ry;
     int twoRx2 = 2*rx2;
@@ -323,9 +324,10 @@ void midPtElipse(int xc, int yc, int rx, int ry) {
     int x=0;
     int y=ry;
     int px=0;
-    int py= twoRx2*y;
+    int py=twoRx2*y;
 
     void elipsePlotPts(int,int,int,int);
+
 
     elipsePlotPts(xc,yc,x,y);
     /* Regiao 1 */
