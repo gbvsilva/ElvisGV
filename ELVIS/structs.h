@@ -7,10 +7,14 @@ struct vertex{
 };
 
 struct line{
-    line* next;
+    line* nextLine;
+    line* previousLine;
+    bool marked;
     vertex v1, v2;
     line(){
-        next = NULL;
+        nextLine = NULL;
+        previousLine = NULL;
+	marked = false;
     }
 };
 
@@ -31,18 +35,18 @@ struct elipse {
 };
 
 struct obj{
-    obj* next;
+    obj* nextObj;
+    obj* previousObj;
     line* firstLine;
     line* lastLine;
     circle* c;
     elipse* elip;
-    int type;
-    int layer;
     float r;
     float g;
     float b;
     obj(){
-        next = NULL;
+        nextObj = NULL;
+        previousObj = NULL;
         firstLine = NULL;
         lastLine = NULL;
         c=NULL;
