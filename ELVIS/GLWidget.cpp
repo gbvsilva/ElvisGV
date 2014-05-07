@@ -121,6 +121,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 	    else{
 		lastObj->nextObj = new obj();
+		lastObj->nextObj->previousObj = lastObj;
 		lastObj = lastObj->nextObj;
 	    }
 	    if(lastObj->firstLine == NULL){
@@ -129,6 +130,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 	    else{
 		lastObj->lastLine->nextLine = new line();
+		lastObj->lastLine->nextLine->previousLine = lastObj->lastLine;
 		lastObj->lastLine = lastObj->lastLine->nextLine;
 	    }
 	    lastObj->lastLine->v1.x = pos1X;
@@ -200,7 +202,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     /* Operacao de CLIPPING */
     else if(OPTION == 4){
-	printf("!\n");
 	line* aux;
 	if(click == false){
 	    pos1X = event->x();
@@ -255,7 +256,21 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	updateGL();
     }
     else if(OPTION == 7){
+	line* newLine;
+	if(markedLine != NULL){
+	    newLine = new line();
+	    newLine->nextLine = markedLine->nextLine;
+	    newLine->nextLine->previousLine = newLine;
+	    markedLine->nextLine = newLine;
+	    newLine->previousLine = markedLine;
 
+	    markedLine->v2.x = abs(markedLine->v1.x - markedLine->v2.x);
+	    markedLine->v2.y = abs(markedLine->v1.y - markedLine->v2.y);
+	    newLine->v1.x = markedLine->v2.x;
+	    newLine->v1.y = markedLine->v2.y;
+	    newLine->v2.x = newLine->nextLine->v1.x;
+	    newLine->v2.y = newLine->nextLine->v1.y;
+	}
     }
     else if(OPTION == 8){
 	bool foundLine = true;
