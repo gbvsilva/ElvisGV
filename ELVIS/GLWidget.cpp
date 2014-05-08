@@ -24,6 +24,7 @@ obj* firstObj = NULL;
 obj* lastObj = NULL;
 
 line* markedLine = NULL;
+obj* markedObj = NULL;
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
@@ -256,28 +257,42 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	updateGL();
     }
     else if(OPTION == 7){
-	line* newLine;
-	if(markedLine != NULL){
-	    newLine = new line();
-	    newLine->nextLine = markedLine->nextLine;
-	    newLine->nextLine->previousLine = newLine;
-	    markedLine->nextLine = newLine;
-	    newLine->previousLine = markedLine;
+	if(click == false){
+	    if(markedLine != NULL){
+		line* newLine = new line();
+		newLine->previousLine = markedLine;
+		newLine->nextLine = markedLine->nextLine;
+		newLine->v1.x = pos2X;
+		newLine->v1.y = pos2Y;
+		newLine->v2.x = markedLine->v2.x;
+		newLine->v2.y = markedLine->v2.y;
 
-	    markedLine->v2.x = abs(markedLine->v1.x - markedLine->v2.x);
-	    markedLine->v2.y = abs(markedLine->v1.y - markedLine->v2.y);
-	    newLine->v1.x = markedLine->v2.x;
-	    newLine->v1.y = markedLine->v2.y;
-	    newLine->v2.x = newLine->nextLine->v1.x;
-	    newLine->v2.y = newLine->nextLine->v1.y;
+		markedLine->v2.x = pos2X;
+		markedLine->v2.y = pos2Y;
+		markedLine->nextLine = newLine;
+
+		if(newLine->nextLine != NULL){
+		    newLine->nextLine->previousLine = newLine;
+		    newLine->nextLine->v1.x = newLine->v2.x;
+		    newLine->nextLine->v1.y = newLine->v2.y;
+		}
+		markedLine->marked = false;
+		markedLine = newLine;
+		click = true;
+	    }
 	}
+	else{
+	    click = false;
+	    markedLine = NULL;
+	}
+	updateGL();
     }
     else if(OPTION == 8){
 	bool foundLine = true;
 	objPt = firstObj;
 	float m;
 	int x0, y0, x1, y1, clipSize;
-	clipSize = 8;
+	clipSize = 4;
 
 	pos1X = event->x();
 	pos1Y = mouseH - event->y();
@@ -298,6 +313,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		    else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
 		    // Casos não triviais
 		    else{
+			printf("X");
 			if(linePt->v1.x > linePt->v2.x){
 			    x0 = linePt->v2.x;
 			    y0 = linePt->v2.y;
@@ -311,23 +327,25 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			    y1 = linePt->v2.y;
 			}
 			m = (float)(y1-y0)/(float)(x1-x0);
-			foundLine = false;
-			if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
-			else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
-			else if(x0 + 1/m*(pos1Y - clipSize - y0) > pos1X - clipSize && x0 + 1/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
-			else if(x0 + 1/m*(pos1Y + clipSize - y0) > pos1X - clipSize && x0 + 1/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+			if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
+				    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+			else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
+				    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+			else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
+				    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+			else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
+				    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		    }
 		    if(foundLine == true){
 			markedLine = linePt;
-			linePt->marked = true;
 		    }
 		    linePt = linePt->nextLine;
 		}
 		objPt = objPt->nextObj;
 	    }
+	    if(markedLine != NULL) markedLine->marked = true;
 	}
-	repaint();
-	//updateGL();
+	updateGL();
     }
 }
 
@@ -360,6 +378,12 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 	    lastObj->lastLine->v2.x = pos2X;
 	    lastObj->lastLine = lastObj->lastLine->nextLine;
 	    lastObj->lastLine->v1.x = pos2X;
+	}
+	else if(OPTION == 7){
+	    markedLine->v1.x = pos2X;
+	    markedLine->v1.y = pos2Y;
+	    markedLine->previousLine->v2.x = pos2X;
+	    markedLine->previousLine->v2.y = pos2Y;
 	}
 	updateGL();
     }
@@ -396,6 +420,10 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
 	case Qt::Key_3:
 	    OPTION = 3;
+	    clean();
+	    break;
+	case Qt::Key_7:
+	    OPTION = 7;
 	    clean();
 	    break;
 	case Qt::Key_4:
