@@ -24,6 +24,7 @@ obj* firstObj = NULL;
 obj* lastObj = NULL;
 
 line* markedLine = NULL;
+line* markedLine2 = NULL;
 obj* markedObj = NULL;
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
@@ -51,7 +52,7 @@ void GLWidget::resizeGL(int w, int h) {
     glLoadIdentity();
 }
 
-void drawSquareMarker(int x, int y, int size){
+void GLWidget::drawSquareMarker(int x, int y, int size){
     bresenham(x - size, y - size, x + size, y - size );    
     bresenham(x + size, y - size, x + size, y + size );    
     bresenham(x + size, y + size, x - size, y + size );    
@@ -121,7 +122,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     line* linePt;
     /* Desenhar LINHA */
     if(OPTION == 1) {
-	    clearMarkers();
+	clearMarkers();
 	if(event->button() == Qt::LeftButton) {
 	    if(click == false) {
 		pos1X = event->x();
@@ -169,7 +170,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     /* Desenhar CIRCULO */
     else if(OPTION==2) {
-	    clearMarkers();
+	clearMarkers();
 	if(click == false) {
 	    click = true;
 	    pos1X = event->x();
@@ -199,7 +200,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     /* Desenhar ELIPSE */
     else if(OPTION == 3) {
-	    clearMarkers();
+	clearMarkers();
 	if(event->button() == Qt::LeftButton) {
 	    if(click==false) {
 		click=true;
@@ -232,7 +233,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     // Retângulo
     else if(OPTION == 4){
 	rectangle* rec;
-	    clearMarkers();
+	clearMarkers();
 	if(click == false){
 	    pos1X = event->x();
 	    pos1Y = mouseH - event->y();
@@ -274,6 +275,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		line* newLine = new line();
 		newLine->previousLine = markedLine;
 		newLine->nextLine = markedLine->nextLine;
+		newLine->top = markedLine->top;
 		newLine->v1.x = pos2X;
 		newLine->v1.y = pos2Y;
 		newLine->v2.x = markedLine->v2.x;
@@ -283,20 +285,17 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		markedLine->v2.y = pos2Y;
 		markedLine->nextLine = newLine;
 
-		if(newLine->nextLine != NULL){
-		    newLine->nextLine->previousLine = newLine;
-		    newLine->nextLine->v1.x = newLine->v2.x;
-		    newLine->nextLine->v1.y = newLine->v2.y;
-		}
-		markedLine->marked = false;
-		markedLine = newLine;
+		if(newLine->nextLine != NULL) newLine->nextLine->previousLine = newLine;
+		else newLine->top->lastLine = newLine;
+		markedLine2 = newLine;
 		click = true;
 	    }
 	}
 	else{
+	    markedLine2 = NULL;
 	    click = false;
-	    clearMarkers();
 	}
+	clearMarkers();
 	updateGL();
     }
     // Seleção de linha
@@ -363,7 +362,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	int posDist;
 	int x0, y0, x1, y1, count;
 	int clipSize = 4;
-	
+
 	objPt = firstObj;
 	clearMarkers();
 	clipSize = 4;
@@ -406,7 +405,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		}
 		if(foundLine == true){
-		    markedLine = linePt;
 		    markedObj = objPt;
 		}
 		linePt = linePt->nextLine;
@@ -480,16 +478,16 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 
 	}
 	else if(OPTION == 7){
-	    markedLine->v1.x = pos2X;
-	    markedLine->v1.y = pos2Y;
-	    markedLine->previousLine->v2.x = pos2X;
-	    markedLine->previousLine->v2.y = pos2Y;
+	    markedLine2->v1.x = pos2X;
+	    markedLine2->v1.y = pos2Y;
+	    markedLine2->previousLine->v2.x = pos2X;
+	    markedLine2->previousLine->v2.y = pos2Y;
 	}
 	updateGL();
     }
 }
 
-void clearMouse(){
+void GLWidget::clearMouse(){
     click = false;
     pos1X = 0;
     pos1Y = 0;
@@ -497,12 +495,12 @@ void clearMouse(){
     pos2Y = 0;
 }
 
-void clearMarkers(){
+void GLWidget::clearMarkers(){
     markedLine = NULL;
     markedObj = NULL;
 }
 
-void delSelected(){
+void GLWidget::delSelected(){
     if(markedLine != NULL){
 	if(markedLine->previousLine == NULL && markedLine->nextLine == NULL){
 	    printf("del.1\n");
