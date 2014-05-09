@@ -63,10 +63,24 @@ void GLWidget::resizeGL(int w, int h) {
 }
 
 void GLWidget::drawSquareMarker(int x, int y, int size){
+    glColor3f(1, 0, 0);
     bresenham(x - size, y - size, x + size, y - size );    
     bresenham(x + size, y - size, x + size, y + size );    
     bresenham(x + size, y + size, x - size, y + size );    
     bresenham(x - size, y + size, x - size, y - size );
+}
+
+void GLWidget::drawSelSquareMarker(int x, int y, int size){
+    glColor3f(0, 0, 0);
+    bresenham(x - size, y - size, x + size, y - size );    
+    bresenham(x + size, y - size, x + size, y + size );    
+    bresenham(x + size, y + size, x - size, y + size );    
+    bresenham(x - size, y + size, x - size, y - size );
+    glColor3f(1, 0, 0);
+    for(int i = -size + 1; i <= size - 1; i++){
+	bresenham(x - size + 1, y + i, x + size, y + i);
+    }
+
 }
 
 void GLWidget::paintGL() {
@@ -111,19 +125,20 @@ void GLWidget::paintGL() {
 	    while(linePt != NULL) {
 		glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
 		bresenham((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, (linePt->v2.x - panX)*zoom, (linePt->v2.y - panY)*zoom);
-		if((markedObj != NULL && markedObj == objPt) || (markedLine != NULL && markedLine == linePt)){
-		    glColor3f(1, 0, 0);
+		if((markedObj != NULL && markedObj == objPt) || (markedLine != NULL && markedLine == linePt) || (markedLine != NULL && markedLine == linePt->previousLine)){
+		    drawSelSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
 		}
-		else if(markedLine != NULL && markedLine == linePt->previousLine){
-		    glColor3f(1, 0, 0);
+		else{
+		    drawSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
 		}
-		drawSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
 		linePt = linePt->nextLine;
 	    }
-	    if(markedLine != objPt->lastLine && markedObj != objPt){
-		glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
+	    if(markedLine == objPt->lastLine || markedObj == objPt){
+		drawSelSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5);
 	    }
-	    drawSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5);
+	    else{
+		drawSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5);
+	    }
 	}
 	else if(rec != NULL){
 	    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
@@ -131,18 +146,25 @@ void GLWidget::paintGL() {
 	    bresenham((rec->v2.x - panX)*zoom, (rec->v2.y - panY)*zoom, (rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom);
 	    bresenham((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, (rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom);
 	    bresenham((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, (rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom);
-	    if(markedObj != NULL && markedObj == objPt) glColor3f(1, 0, 0);
-	    drawSquareMarker((rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom, 5);	
-	    drawSquareMarker((rec->v2.x - panX)*zoom, (rec->v2.y - panY)*zoom, 5);	
-	    drawSquareMarker((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, 5);	
-	    drawSquareMarker((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, 5);
+	    if(markedObj != NULL && markedObj == objPt){
+		drawSelSquareMarker((rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom, 5);	
+		drawSelSquareMarker((rec->v2.x - panX)*zoom, (rec->v2.y - panY)*zoom, 5);	
+		drawSelSquareMarker((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, 5);	
+		drawSelSquareMarker((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, 5);
+	    }
+	    else{
+		drawSquareMarker((rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom, 5);	
+		drawSquareMarker((rec->v2.x - panX)*zoom, (rec->v2.y - panY)*zoom, 5);	
+		drawSquareMarker((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, 5);	
+		drawSquareMarker((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, 5);
+	    }
 	}
 	else if(c != NULL) {
 	    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
 	    midPtCircle((c->center.x - panX)*zoom, (c->center.y - panY)*zoom, (c->radius)*zoom);
 	    if(markedObj != NULL && markedObj == objPt) glColor3f(1, 0, 0);
-	    drawSquareMarker((c->center.x - panX)*zoom, (c->center.y - panY)*zoom, 5);
-	    drawSquareMarker((c->center.x - panX + c->radius)*zoom, (c->center.y - panY)*zoom, 5);
+	    drawSquareMarker((c->center.x - panX), (c->center.y - panY), 5);
+	    drawSquareMarker((c->center.x - panX + c->radius), (c->center.y - panY), 5);
 	}
 	else if(elip != NULL) {
 	    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);

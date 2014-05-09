@@ -26,6 +26,7 @@ protected:
     void clearMouse();
     void delSelected();
     void drawSquareMarker(int x, int y, int size);
+    void drawSelSquareMarker(int x, int y, int size);
 };
 
 #endif // GLWIDGET_H
