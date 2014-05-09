@@ -72,7 +72,7 @@ void GLWidget::paintGL() {
 	    linePt = objPt->firstLine;
 	    while(linePt != NULL) {
 		bresenham(linePt->v1.x, linePt->v1.y, linePt->v2.x, linePt->v2.y);
-		if(linePt->marked == true){
+		if(objPt->marked == true){
 		    bresenham(linePt->v2.x - 5, linePt->v2.y - 5, linePt->v2.x + 5, linePt->v2.y - 5 );    
 		    bresenham(linePt->v2.x + 5, linePt->v2.y - 5, linePt->v2.x + 5, linePt->v2.y + 5 );    
 		    bresenham(linePt->v2.x + 5, linePt->v2.y + 5, linePt->v2.x - 5, linePt->v2.y + 5 );    
@@ -201,7 +201,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 	}
     }
-    /* Operacao de CLIPPING */
     else if(OPTION == 4){
 	line* aux;
 	if(click == false){
@@ -313,7 +312,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		    else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
 		    // Casos não triviais
 		    else{
-			printf("X");
 			if(linePt->v1.x > linePt->v2.x){
 			    x0 = linePt->v2.x;
 			    y0 = linePt->v2.y;

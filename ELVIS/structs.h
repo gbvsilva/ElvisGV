@@ -44,6 +44,7 @@ struct obj{
     float r;
     float g;
     float b;
+    bool marked;
     obj(){
         nextObj = NULL;
         previousObj = NULL;
@@ -54,6 +55,7 @@ struct obj{
         r = 0;
         g = 0;
         b = 0;
+	marked = false;
     }
 };
 #endif
