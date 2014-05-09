@@ -20,6 +20,7 @@ int panY = 0;
 int auxpanX = 0;
 int auxpanY = 0;
 int screenH, screenW;
+float zoom = 1;
 // Clique inicial
 bool click = false;
 // Valor necessário para corrigir o mouse
@@ -82,18 +83,18 @@ void GLWidget::paintGL() {
     //Desenho da grade
     if(grid){
 	glColor3f(0.9, 0.9, 0.9);
-	for(int i = 0; i < screenW+gridSize/2; i+= gridSize){
-	    bresenham(i+gridSize/2, 0, i+gridSize/2, screenH);
+	for(int i = -gridSize; i < screenW+gridSize; i+= gridSize){
+	    bresenham(i + gridSize/2 - panX % gridSize, 0, i + gridSize/2 - panX % gridSize, screenH);
 	}
-	for(int i = 0; i < screenH+gridSize/2; i+= gridSize){
-	    bresenham(0, i+gridSize/2, screenW, i+gridSize/2);
+	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize){
+	    bresenham(0, i+gridSize/2 - panY % gridSize, screenW, i+gridSize/2 - panY % gridSize);
 	}
 	glColor3f(0.7, 0.7, 0.7);
-	for(int i = 0; i < screenW; i+= gridSize){
-	    bresenham(i, 0, i, screenH);
+	for(int i = -gridSize; i < screenW+gridSize; i+= gridSize){
+	    bresenham(i - panX % gridSize, 0, i - panX % gridSize, screenH);
 	}
-	for(int i = 0; i < screenH; i+= gridSize){
-	    bresenham(0, i, screenW, i);
+	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize){
+	    bresenham(0, i - panY % gridSize, screenW, i - panY % gridSize);
 	}
     }
 
