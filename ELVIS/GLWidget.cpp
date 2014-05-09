@@ -56,10 +56,10 @@ void GLWidget::paintGL() {
     line* linePt;
     circle* c;
     elipse* elip;
-    
+
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
-        
+
     objPt = firstObj;
     while(objPt != NULL){
 	linePt = objPt->firstLine;
@@ -67,7 +67,7 @@ void GLWidget::paintGL() {
 	elip = objPt->elip;
 	// Desenhando objetos com suas respectivas cores
 	glColor3f(objPt->r, objPt->g, objPt->b);
-	
+
 	if(linePt != NULL) {
 	    linePt = objPt->firstLine;
 	    while(linePt != NULL) {
@@ -87,6 +87,16 @@ void GLWidget::paintGL() {
 	}
 	else if(c != NULL) {
 	    midPtCircle(c->center.x, c->center.y, c->radius);
+	    if(markedObj != NULL && markedObj == objPt){
+		bresenham(c->center.x - 5, c->center.y - 5, c->center.x + 5, c->center.y - 5 );    
+		bresenham(c->center.x + 5, c->center.y - 5, c->center.x + 5, c->center.y + 5 );    
+		bresenham(c->center.x + 5, c->center.y + 5, c->center.x - 5, c->center.y + 5 );    
+		bresenham(c->center.x - 5, c->center.y + 5, c->center.x - 5, c->center.y - 5 );
+		bresenham(c->center.x - 5 + c->radius, c->center.y - 5, c->center.x + 5 + c->radius, c->center.y - 5);    
+		bresenham(c->center.x + 5 + c->radius, c->center.y - 5, c->center.x + 5 + c->radius, c->center.y + 5);    
+		bresenham(c->center.x + 5 + c->radius, c->center.y + 5, c->center.x - 5 + c->radius, c->center.y + 5);    
+		bresenham(c->center.x - 5 + c->radius, c->center.y + 5, c->center.x - 5 + c->radius, c->center.y - 5);
+	    }
 	}
 	else if(elip != NULL) {
 	    midPtElipse(elip->center.x, elip->center.y, elip->rx, elip->ry);
@@ -158,6 +168,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		lastObj = firstObj;
 	    }else {
 		lastObj->nextObj = new obj();
+		lastObj->nextObj->previousObj = lastObj;
 		lastObj = lastObj->nextObj;
 	    }
 
@@ -188,6 +199,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		}
 		else {
 		    lastObj->nextObj = new obj();
+		    lastObj->nextObj->previousObj = lastObj;
 		    lastObj = lastObj->nextObj;
 		}
 
@@ -211,14 +223,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    pos2X = pos1X;
 	    pos2Y = pos1Y;
 	    click = true;
-	    if(firstObj == NULL){
-		firstObj = new obj();
-		lastObj = firstObj;
-	    }
-	    else{
-		lastObj->nextObj = new obj();
-		lastObj = lastObj->nextObj;
-	    }
 	}
 	else{
 	    pos1X = pos2X;
@@ -226,6 +230,15 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    pos2X = event->x();
 	    pos2Y = mouseH - event->y();
 	    click = false;
+	}
+	if(firstObj == NULL){
+	    firstObj = new obj();
+	    lastObj = firstObj;
+	}
+	else{
+	    lastObj->nextObj = new obj();
+	    lastObj->nextObj->previousObj = lastObj;
+	    lastObj = lastObj->nextObj;
 	}
 	lastObj->firstLine = new line();
 	lastObj->lastLine = lastObj->firstLine;
@@ -312,6 +325,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	}
 	if(objPt != NULL && objPt->firstLine != NULL){
 	    while(objPt != NULL){
+		// Seleção por linha
 		linePt = objPt->firstLine;
 		while(linePt != NULL){
 		    foundLine = true;
@@ -336,13 +350,13 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			}
 			m = (float)(y1-y0)/(float)(x1-x0);
 			if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
-				    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+				y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
 			else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
-				    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+				y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
 			else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
-				    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+				x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
 			else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
-				    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+				x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		    }
 		    if(foundLine == true){
 			markedLine = linePt;
@@ -358,6 +372,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     else if(OPTION == 9){
 	bool foundLine = true;
 	objPt = firstObj;
+	int posDist;
 	float m;
 	int x0, y0, x1, y1, clipSize;
 	clipSize = 4;
@@ -399,13 +414,13 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			}
 			m = (float)(y1-y0)/(float)(x1-x0);
 			if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
-				    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+				y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
 			else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
-				    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+				y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
 			else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
-				    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+				x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
 			else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
-				    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+				x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		    }
 		    if(foundLine == true){
 			markedLine = linePt;
@@ -413,6 +428,14 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		    }
 		    linePt = linePt->nextLine;
 		}
+		// Seleção da circunferência
+		if(objPt->c != NULL){
+		    posDist = sqrt(pow((abs(objPt->c->center.x - pos1X)), 2) + pow((abs(objPt->c->center.y - pos1Y)), 2));
+		    if(objPt->c->radius > posDist - clipSize && objPt->c->radius < posDist + clipSize) markedObj = objPt;
+		}
+		// Seleção da elipse
+		// else if(){
+		// }
 		objPt = objPt->nextObj;
 	    }
 	    if(markedLine != NULL) markedLine->marked = true;
@@ -485,13 +508,13 @@ void delSelected(){
 	else if(markedLine->nextLine == NULL){
 	    printf("del.3\n");
 	    markedLine->previousLine->nextLine = NULL;
-	printf("X\n");
+	    printf("X\n");
 	    markedLine->previousLine->v2.x = markedLine->v2.x;
-	printf("X\n");
+	    printf("X\n");
 	    markedLine->previousLine->v2.y = markedLine->v2.y;
-	printf("X\n");
+	    printf("X\n");
 	    markedLine->top->lastLine = markedLine->previousLine;
-	printf("X\n");
+	    printf("X\n");
 	}
 	else{
 	    printf("del.4\n");
@@ -507,8 +530,8 @@ void delSelected(){
     }
     if(markedObj != NULL){
 	if(markedObj->previousObj == NULL && markedObj->nextObj == NULL){
-	   firstObj = NULL;
-	   lastObj = NULL;
+	    firstObj = NULL;
+	    lastObj = NULL;
 	}
 	else if(markedObj->previousObj == NULL){
 	    markedObj->nextObj->previousObj = NULL;
@@ -570,6 +593,10 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
 	case Qt::Key_Delete:
 	    delSelected();
+	    updateGL();
+	case Qt::Key_M:
+	    updateGL();
+	case Qt::Key_R:
 	    updateGL();
 	default:
 	    event->ignore();
