@@ -9,11 +9,17 @@
 
 // Opcao da forma de desenho
 int OPTION = 1;
+bool grid = true;
 // Posição anterior e atual que o mouse clicou, respectivamente
 int pos1X = 0;
 int pos1Y = 0;
 int pos2X = 0;
 int pos2Y = 0;
+int panX = 0;
+int panY = 0;
+int auxpanX = 0;
+int auxpanY = 0;
+int screenH, screenW;
 // Clique inicial
 bool click = false;
 // Valor necessário para corrigir o mouse
@@ -31,6 +37,7 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
     setMouseTracking(true);
 }
+
 
 void GLWidget::initializeGL() {
     glDisable(GL_TEXTURE_2D);
@@ -50,6 +57,8 @@ void GLWidget::resizeGL(int w, int h) {
     gluOrtho2D(0, w, 0, h); // set origin to bottom left corner
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    screenH = h;
+    screenW = w;
 }
 
 void GLWidget::drawSquareMarker(int x, int y, int size){
@@ -65,9 +74,28 @@ void GLWidget::paintGL() {
     circle* c;
     elipse* elip;
     rectangle* rec;
+    int gridSize = 40;
 
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
+    
+    //Desenho da grade
+    if(grid){
+	glColor3f(0.9, 0.9, 0.9);
+	for(int i = 0; i < screenW+gridSize/2; i+= gridSize){
+	    bresenham(i+gridSize/2, 0, i+gridSize/2, screenH);
+	}
+	for(int i = 0; i < screenH+gridSize/2; i+= gridSize){
+	    bresenham(0, i+gridSize/2, screenW, i+gridSize/2);
+	}
+	glColor3f(0.7, 0.7, 0.7);
+	for(int i = 0; i < screenW; i+= gridSize){
+	    bresenham(i, 0, i, screenH);
+	}
+	for(int i = 0; i < screenH; i+= gridSize){
+	    bresenham(0, i, screenW, i);
+	}
+    }
 
     objPt = firstObj;
     while(objPt != NULL){
@@ -75,42 +103,43 @@ void GLWidget::paintGL() {
 	c = objPt->c;
 	elip = objPt->elip;
 	rec = objPt->rec;
+
 	// Desenhando objetos com suas respectivas cores
 	if(linePt != NULL) {
 	    linePt = objPt->firstLine;
 	    while(linePt != NULL) {
 		glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-		bresenham(linePt->v1.x, linePt->v1.y, linePt->v2.x, linePt->v2.y);
-		if((markedObj != NULL && markedObj == objPt) || (markedLine != NULL && markedLine == linePt)) glColor3f(255, 0, 0);
-		if(markedLine != NULL && markedLine == linePt->previousLine) glColor3f(255, 0, 0);
-		drawSquareMarker(linePt->v1.x, linePt->v1.y, 5);
+		bresenham(linePt->v1.x - panX, linePt->v1.y - panY, linePt->v2.x - panX, linePt->v2.y - panY);
+		if((markedObj != NULL && markedObj == objPt) || (markedLine != NULL && markedLine == linePt)) glColor3f(1, 0, 0);
+		if(markedLine != NULL && markedLine == linePt->previousLine) glColor3f(1, 0, 0);
+		drawSquareMarker(linePt->v1.x - panX, linePt->v1.y - panY, 5);
 		linePt = linePt->nextLine;
 	    }
 	    if(markedLine != objPt->lastLine && markedObj != objPt) glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-	    drawSquareMarker(objPt->lastLine->v2.x, objPt->lastLine->v2.y, 5);
+	    drawSquareMarker(objPt->lastLine->v2.x - panX, objPt->lastLine->v2.y - panY, 5);
 	}
 	else if(rec != NULL){
 	    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-	    bresenham(rec->v1.x, rec->v1.y, rec->v2.x, rec->v2.y);
-	    bresenham(rec->v2.x, rec->v2.y, rec->v3.x, rec->v3.y);
-	    bresenham(rec->v3.x, rec->v3.y, rec->v4.x, rec->v4.y);
-	    bresenham(rec->v4.x, rec->v4.y, rec->v1.x, rec->v1.y);
-	    if(markedObj != NULL && markedObj == objPt) glColor3f(255, 0, 0);
-	    drawSquareMarker(rec->v1.x, rec->v1.y, 5);	
-	    drawSquareMarker(rec->v2.x, rec->v2.y, 5);	
-	    drawSquareMarker(rec->v3.x, rec->v3.y, 5);	
-	    drawSquareMarker(rec->v4.x, rec->v4.y, 5);	
+	    bresenham(rec->v1.x - panX, rec->v1.y - panY, rec->v2.x - panX, rec->v2.y - panY);
+	    bresenham(rec->v2.x - panX, rec->v2.y - panY, rec->v3.x - panX, rec->v3.y - panY);
+	    bresenham(rec->v3.x - panX, rec->v3.y - panY, rec->v4.x - panX, rec->v4.y - panY);
+	    bresenham(rec->v4.x - panX, rec->v4.y - panY, rec->v1.x - panX, rec->v1.y - panY);
+	    if(markedObj != NULL && markedObj == objPt) glColor3f(1, 0, 0);
+	    drawSquareMarker(rec->v1.x - panX, rec->v1.y - panY, 5);	
+	    drawSquareMarker(rec->v2.x - panX, rec->v2.y - panY, 5);	
+	    drawSquareMarker(rec->v3.x - panX, rec->v3.y - panY, 5);	
+	    drawSquareMarker(rec->v4.x - panX, rec->v4.y - panY, 5);	
 	}
 	else if(c != NULL) {
 	    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-	    midPtCircle(c->center.x, c->center.y, c->radius);
-	    if(markedObj != NULL && markedObj == objPt) glColor3f(255, 0, 0);
-	    drawSquareMarker(c->center.x, c->center.y, 5);
-	    drawSquareMarker(c->center.x + c->radius, c->center.y, 5);
+	    midPtCircle(c->center.x - panX, c->center.y, c->radius);
+	    if(markedObj != NULL && markedObj == objPt) glColor3f(1, 0, 0);
+	    drawSquareMarker(c->center.x - panX, c->center.y - panY, 5);
+	    drawSquareMarker(c->center.x - panX + c->radius, c->center.y - panY, 5);
 	}
 	else if(elip != NULL) {
 	    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-	    midPtElipse(elip->center.x, elip->center.y, elip->rx, elip->ry);
+	    midPtElipse(elip->center.x - panX, elip->center.y - panY, elip->rx - panX, elip->ry - panY);
 	}
 	objPt = objPt->nextObj;
     }
@@ -451,6 +480,19 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	if(markedLine != NULL) markedLine->marked = true;
 	updateGL();
     }
+    //Screen pan
+    else if(OPTION == 20){
+	if(click == false){
+	    pos1X = event->x();
+	    pos1Y = mouseH - event->y();
+	    click = true;
+	}
+	else{
+	    auxpanX = panX;
+	    auxpanY = panY;
+	    click = false;
+	}
+    }
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -475,13 +517,18 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 	    lastObj->rec->v3.x = pos2X;
 	    lastObj->rec->v3.y = pos2Y;
 	    lastObj->rec->v4.x = pos2X;
-
 	}
 	else if(OPTION == 7){
 	    markedLine2->v1.x = pos2X;
 	    markedLine2->v1.y = pos2Y;
 	    markedLine2->previousLine->v2.x = pos2X;
 	    markedLine2->previousLine->v2.y = pos2Y;
+	}
+	else if(OPTION == 20){
+	    if(click == true){
+		panX = auxpanX + pos1X - event->x();
+		panY = auxpanY + pos1Y - mouseH + event->y();
+	    }
 	}
 	updateGL();
     }
@@ -503,26 +550,19 @@ void GLWidget::clearMarkers(){
 void GLWidget::delSelected(){
     if(markedLine != NULL){
 	if(markedLine->previousLine == NULL && markedLine->nextLine == NULL){
-	    printf("del.1\n");
 	    markedObj = markedLine->top;
 	}
 	else if(markedLine->previousLine == NULL){
-	    printf("del.2\n");
 	    markedLine->nextLine->previousLine = NULL;
 	    markedLine->nextLine->v1.x = markedLine->v1.x;
 	    markedLine->nextLine->v1.y = markedLine->v1.y;
 	    markedLine->top->firstLine = markedLine->nextLine;
 	}
 	else if(markedLine->nextLine == NULL){
-	    printf("del.3\n");
 	    markedLine->previousLine->nextLine = NULL;
-	    printf("X\n");
 	    markedLine->previousLine->v2.x = markedLine->v2.x;
-	    printf("X\n");
 	    markedLine->previousLine->v2.y = markedLine->v2.y;
-	    printf("X\n");
 	    markedLine->top->lastLine = markedLine->previousLine;
-	    printf("X\n");
 	}
 	else{
 	    printf("del.4\n");
@@ -603,10 +643,19 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    delSelected();
 	    clearMouse();
 	    updateGL();
-	case Qt::Key_M:
+	    break;
+	case Qt::Key_G:
+	    if(grid == true) grid = false;
+	    else grid = true;
 	    updateGL();
+	    break;
 	case Qt::Key_R:
 	    updateGL();
+	    break;
+	case Qt::Key_5:
+	    OPTION = 20;
+	    updateGL();
+	    break;
 	default:
 	    event->ignore();
 	    break;
