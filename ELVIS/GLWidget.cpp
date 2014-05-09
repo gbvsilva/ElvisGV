@@ -135,7 +135,7 @@ void GLWidget::paintGL() {
 	    drawSquareMarker((rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom, 5);	
 	    drawSquareMarker((rec->v2.x - panX)*zoom, (rec->v2.y - panY)*zoom, 5);	
 	    drawSquareMarker((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, 5);	
-	    drawSquareMarker((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, 5);	
+	    drawSquareMarker((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, 5);
 	}
 	else if(c != NULL) {
 	    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
@@ -359,6 +359,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
 		// Casos não triviais
 		else{
+		    foundLine = false;
 		    if(linePt->v1.x > linePt->v2.x){
 			x0 = linePt->v2.x;
 			y0 = linePt->v2.y;
@@ -418,6 +419,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
 		// Casos não triviais
 		else{
+		    foundLine = false;
 		    if(linePt->v1.x > linePt->v2.x){
 			x0 = linePt->v2.x;
 			y0 = linePt->v2.y;
@@ -431,14 +433,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			y1 = linePt->v2.y;
 		    }
 		    m = (float)(y1-y0)/(float)(x1-x0);
-		    if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
-			    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
-		    else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
-			    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
-		    else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
-			    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
-		    else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
-			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+		    if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+		    else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+		    else if(x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize && x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+		    else if(x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize && x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		}
 		if(foundLine == true){
 		    markedObj = objPt;
