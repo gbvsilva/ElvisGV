@@ -6,7 +6,10 @@ struct vertex{
     int y;
 };
 
+struct obj;
+
 struct line{
+    obj* top;
     line* nextLine;
     line* previousLine;
     bool marked;
