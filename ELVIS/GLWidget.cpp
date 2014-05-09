@@ -89,7 +89,7 @@ void GLWidget::paintGL() {
     circle* c;
     elipse* elip;
     rectangle* rec;
-    int gridSize = 40 * zoom;
+    int gridSize = 40;
 
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
@@ -98,17 +98,17 @@ void GLWidget::paintGL() {
     if(grid){
 	glColor3f(0.9, 0.9, 0.9);
 	for(int i = -gridSize; i < screenW+gridSize; i+= gridSize){
-	    bresenham(i + gridSize/2 - panX % gridSize, 0, i + gridSize/2 - panX % gridSize, screenH);
+	    bresenham((i + gridSize/2 - panX % gridSize)*zoom, 0, (i + gridSize/2 - panX % gridSize)*zoom, (screenH)*zoom);
 	}
 	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize){
-	    bresenham(0, i+gridSize/2 - panY % gridSize, screenW, i+gridSize/2 - panY % gridSize);
+	    bresenham(0, (i+gridSize/2 - panY % gridSize)*zoom, (screenW)*zoom, (i+gridSize/2 - panY % gridSize)*zoom);
 	}
 	glColor3f(0.7, 0.7, 0.7);
 	for(int i = -gridSize; i < screenW+gridSize; i+= gridSize){
-	    bresenham(i - panX % gridSize, 0, i - panX % gridSize, screenH);
+	    bresenham((i - panX % gridSize)*zoom, 0, (i - panX % gridSize)*zoom, (screenH)*zoom);
 	}
 	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize){
-	    bresenham(0, i - panY % gridSize, screenW, i - panY % gridSize);
+	    bresenham(0, (i - panY % gridSize)*zoom, (screenW)*zoom, (i - panY % gridSize)*zoom);
 	}
     }
 
