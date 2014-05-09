@@ -121,6 +121,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     line* linePt;
     /* Desenhar LINHA */
     if(OPTION == 1) {
+	    clearMarkers();
 	if(event->button() == Qt::LeftButton) {
 	    if(click == false) {
 		pos1X = event->x();
@@ -168,6 +169,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     /* Desenhar CIRCULO */
     else if(OPTION==2) {
+	    clearMarkers();
 	if(click == false) {
 	    click = true;
 	    pos1X = event->x();
@@ -197,6 +199,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     /* Desenhar ELIPSE */
     else if(OPTION == 3) {
+	    clearMarkers();
 	if(event->button() == Qt::LeftButton) {
 	    if(click==false) {
 		click=true;
@@ -229,6 +232,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     // Retângulo
     else if(OPTION == 4){
 	rectangle* rec;
+	    clearMarkers();
 	if(click == false){
 	    pos1X = event->x();
 	    pos1Y = mouseH - event->y();
@@ -291,7 +295,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	}
 	else{
 	    click = false;
-	    markedLine = NULL;
+	    clearMarkers();
 	}
 	updateGL();
     }
@@ -302,167 +306,151 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	float m;
 	int x0, y0, x1, y1, clipSize;
 	clipSize = 4;
+	clearMarkers();
 
 	pos1X = event->x();
 	pos1Y = mouseH - event->y();
-	// Remove marcação da linha anterior
-	if(markedLine != NULL){
-	    markedLine->marked = false;
-	    markedLine = NULL;
-	}
-	if(markedObj != NULL){
-	    markedObj->marked = false;
-	    markedObj = NULL;
-	}
-	if(objPt != NULL && objPt->firstLine != NULL){
-	    while(objPt != NULL){
-		// Seleção por linha
-		linePt = objPt->firstLine;
-		while(linePt != NULL){
-		    foundLine = true;
-		    // Casos trivias
-		    if(linePt->v1.x < pos1X - clipSize && linePt->v2.x < pos1X - clipSize) foundLine = false;
-		    else if(linePt->v1.y < pos1Y - clipSize && linePt->v2.y < pos1Y - clipSize) foundLine = false;
-		    else if(linePt->v1.x > pos1X + clipSize && linePt->v2.x > pos1X + clipSize) foundLine = false;
-		    else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
-		    // Casos não triviais
+	markedLine = NULL;
+	markedObj = NULL;
+	while(objPt != NULL){
+	    // Seleção por linha
+	    linePt = objPt->firstLine;
+	    while(linePt != NULL){
+		foundLine = true;
+		// Casos trivias
+		if(linePt->v1.x < pos1X - clipSize && linePt->v2.x < pos1X - clipSize) foundLine = false;
+		else if(linePt->v1.y < pos1Y - clipSize && linePt->v2.y < pos1Y - clipSize) foundLine = false;
+		else if(linePt->v1.x > pos1X + clipSize && linePt->v2.x > pos1X + clipSize) foundLine = false;
+		else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
+		// Casos não triviais
+		else{
+		    if(linePt->v1.x > linePt->v2.x){
+			x0 = linePt->v2.x;
+			y0 = linePt->v2.y;
+			x1 = linePt->v1.x;
+			y1 = linePt->v1.y;
+		    }
 		    else{
-			if(linePt->v1.x > linePt->v2.x){
-			    x0 = linePt->v2.x;
-			    y0 = linePt->v2.y;
-			    x1 = linePt->v1.x;
-			    y1 = linePt->v1.y;
-			}
-			else{
-			    x0 = linePt->v1.x;
-			    y0 = linePt->v1.y;
-			    x1 = linePt->v2.x;
-			    y1 = linePt->v2.y;
-			}
-			m = (float)(y1-y0)/(float)(x1-x0);
-			if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
-				    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
-			else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
-				    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
-			else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
-				    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
-			else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
-				    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+			x0 = linePt->v1.x;
+			y0 = linePt->v1.y;
+			x1 = linePt->v2.x;
+			y1 = linePt->v2.y;
 		    }
-		    if(foundLine == true){
-			markedLine = linePt;
-		    }
-		    linePt = linePt->nextLine;
+		    m = (float)(y1-y0)/(float)(x1-x0);
+		    if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
+			    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+		    else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
+			    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+		    else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
+			    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+		    else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
+			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		}
-		objPt = objPt->nextObj;
+		if(foundLine == true){
+		    markedLine = linePt;
+		}
+		linePt = linePt->nextLine;
 	    }
-	    if(markedLine != NULL) markedLine->marked = true;
+	    objPt = objPt->nextObj;
 	}
+	if(markedLine != NULL) markedLine->marked = true;
 	updateGL();
     }
     // Seleção de objeto
     else if(OPTION == 9){
 	bool foundLine = true;
-	objPt = firstObj;
-	int posDist;
 	float m;
-	int x0, y0, x1, y1, clipSize;
+	int posDist;
+	int x0, y0, x1, y1, count;
+	int clipSize = 4;
+	
+	objPt = firstObj;
+	clearMarkers();
 	clipSize = 4;
-	int count;
-
 	pos1X = event->x();
 	pos1Y = mouseH - event->y();
-	// Remove marcação da linha anterior
-	if(markedLine != NULL){
-	    markedLine->marked = false;
-	    markedLine = NULL;
-	}
-	if(markedObj != NULL){
-	    markedObj->marked = false;
-	    markedObj = NULL;
-	}
-	if(objPt != NULL && objPt->firstLine != NULL){
-	    while(objPt != NULL){
-		linePt = objPt->firstLine;
-		// Seleção de polilinhas
-		if(linePt != NULL) while(linePt != NULL){
-		    foundLine = true;
-		    // Casos trivias
-		    if(linePt->v1.x < pos1X - clipSize && linePt->v2.x < pos1X - clipSize) foundLine = false;
-		    else if(linePt->v1.y < pos1Y - clipSize && linePt->v2.y < pos1Y - clipSize) foundLine = false;
-		    else if(linePt->v1.x > pos1X + clipSize && linePt->v2.x > pos1X + clipSize) foundLine = false;
-		    else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
-		    // Casos não triviais
+
+	while(objPt != NULL){
+	    linePt = objPt->firstLine;
+
+	    // Seleção de polilinhas
+	    if(linePt != NULL) while(linePt != NULL){
+		foundLine = true;
+		// Casos trivias
+		if(linePt->v1.x < pos1X - clipSize && linePt->v2.x < pos1X - clipSize) foundLine = false;
+		else if(linePt->v1.y < pos1Y - clipSize && linePt->v2.y < pos1Y - clipSize) foundLine = false;
+		else if(linePt->v1.x > pos1X + clipSize && linePt->v2.x > pos1X + clipSize) foundLine = false;
+		else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
+		// Casos não triviais
+		else{
+		    if(linePt->v1.x > linePt->v2.x){
+			x0 = linePt->v2.x;
+			y0 = linePt->v2.y;
+			x1 = linePt->v1.x;
+			y1 = linePt->v1.y;
+		    }
 		    else{
-			if(linePt->v1.x > linePt->v2.x){
-			    x0 = linePt->v2.x;
-			    y0 = linePt->v2.y;
-			    x1 = linePt->v1.x;
-			    y1 = linePt->v1.y;
-			}
-			else{
-			    x0 = linePt->v1.x;
-			    y0 = linePt->v1.y;
-			    x1 = linePt->v2.x;
-			    y1 = linePt->v2.y;
-			}
-			m = (float)(y1-y0)/(float)(x1-x0);
-			if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
-				y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
-			else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
-				y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
-			else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
-				x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
-			else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
-				x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+			x0 = linePt->v1.x;
+			y0 = linePt->v1.y;
+			x1 = linePt->v2.x;
+			y1 = linePt->v2.y;
 		    }
-		    if(foundLine == true){
-			markedLine = linePt;
-			markedObj = objPt;
-		    }
-		    linePt = linePt->nextLine;
+		    m = (float)(y1-y0)/(float)(x1-x0);
+		    if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
+			    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+		    else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
+			    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+		    else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
+			    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+		    else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
+			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		}
-		// Seleção da circunferência
-		else if(objPt->c != NULL){
-		    posDist = sqrt(pow((abs(objPt->c->center.x - pos1X)), 2) + pow((abs(objPt->c->center.y - pos1Y)), 2));
-		    if(objPt->c->radius > posDist - clipSize && objPt->c->radius < posDist + clipSize) markedObj = objPt;
+		if(foundLine == true){
+		    markedLine = linePt;
+		    markedObj = objPt;
 		}
-		// Seleção de retângulo
-		else if(objPt->rec != NULL){
-		    count == 0;
-		    foundLine = true;
-		    if(objPt->rec->v1.x < pos1X - clipSize && objPt->rec->v2.x < pos1X - clipSize) foundLine = false;
-		    else if(objPt->rec->v1.y < pos1Y - clipSize && objPt->rec->v2.y < pos1Y - clipSize) foundLine = false;
-		    else if(objPt->rec->v1.x > pos1X + clipSize && objPt->rec->v2.x > pos1X + clipSize) foundLine = false;
-		    else if(objPt->rec->v1.y > pos1Y + clipSize && objPt->rec->v2.y > pos1Y + clipSize) foundLine = false;
-		    if(foundLine == true) count++;
-		    if(objPt->rec->v2.x < pos1X - clipSize && objPt->rec->v3.x < pos1X - clipSize) foundLine = false;
-		    else if(objPt->rec->v2.y < pos1Y - clipSize && objPt->rec->v3.y < pos1Y - clipSize) foundLine = false;
-		    else if(objPt->rec->v2.x > pos1X + clipSize && objPt->rec->v3.x > pos1X + clipSize) foundLine = false;
-		    else if(objPt->rec->v2.y > pos1Y + clipSize && objPt->rec->v3.y > pos1Y + clipSize) foundLine = false;
-		    
-		    if(foundLine == true) count++;
-		    if(objPt->rec->v3.x < pos1X - clipSize && objPt->rec->v4.x < pos1X - clipSize) foundLine = false;
-		    else if(objPt->rec->v3.y < pos1Y - clipSize && objPt->rec->v4.y < pos1Y - clipSize) foundLine = false;
-		    else if(objPt->rec->v3.x > pos1X + clipSize && objPt->rec->v4.x > pos1X + clipSize) foundLine = false;
-		    else if(objPt->rec->v3.y > pos1Y + clipSize && objPt->rec->v4.y > pos1Y + clipSize) foundLine = false;
-		    
-		    if(foundLine == true) count++;
-		    if(objPt->rec->v4.x < pos1X - clipSize && objPt->rec->v1.x < pos1X - clipSize) foundLine = false;
-		    else if(objPt->rec->v4.y < pos1Y - clipSize && objPt->rec->v1.y < pos1Y - clipSize) foundLine = false;
-		    else if(objPt->rec->v4.x > pos1X + clipSize && objPt->rec->v1.x > pos1X + clipSize) foundLine = false;
-		    else if(objPt->rec->v4.y > pos1Y + clipSize && objPt->rec->v1.y > pos1Y + clipSize) foundLine = false;
-		    
-		    if(foundLine == true) count++;
-		    if(count > 0) markedObj = objPt;
-		}
-		// Seleção da elipse
-		// else if(){
-		// }
-		objPt = objPt->nextObj;
+		linePt = linePt->nextLine;
 	    }
-	    if(markedLine != NULL) markedLine->marked = true;
+	    // Seleção da circunferência
+	    else if(objPt->c != NULL){
+		posDist = sqrt(pow((abs(objPt->c->center.x - pos1X)), 2) + pow((abs(objPt->c->center.y - pos1Y)), 2));
+		if(objPt->c->radius > posDist - clipSize && objPt->c->radius < posDist + clipSize) markedObj = objPt;
+	    }
+	    // Seleção de retângulo
+	    else if(objPt->rec != NULL){
+		count = 0;
+		foundLine = true;
+		if(objPt->rec->v1.x < pos1X - clipSize && objPt->rec->v2.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v1.y < pos1Y - clipSize && objPt->rec->v2.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v1.x > pos1X + clipSize && objPt->rec->v2.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v1.y > pos1Y + clipSize && objPt->rec->v2.y > pos1Y + clipSize) foundLine = false;
+		if(foundLine == true) count++;
+		if(objPt->rec->v2.x < pos1X - clipSize && objPt->rec->v3.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v2.y < pos1Y - clipSize && objPt->rec->v3.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v2.x > pos1X + clipSize && objPt->rec->v3.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v2.y > pos1Y + clipSize && objPt->rec->v3.y > pos1Y + clipSize) foundLine = false;
+
+		if(foundLine == true) count++;
+		if(objPt->rec->v3.x < pos1X - clipSize && objPt->rec->v4.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v3.y < pos1Y - clipSize && objPt->rec->v4.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v3.x > pos1X + clipSize && objPt->rec->v4.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v3.y > pos1Y + clipSize && objPt->rec->v4.y > pos1Y + clipSize) foundLine = false;
+
+		if(foundLine == true) count++;
+		if(objPt->rec->v4.x < pos1X - clipSize && objPt->rec->v1.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v4.y < pos1Y - clipSize && objPt->rec->v1.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v4.x > pos1X + clipSize && objPt->rec->v1.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v4.y > pos1Y + clipSize && objPt->rec->v1.y > pos1Y + clipSize) foundLine = false;
+
+		if(foundLine == true) count++;
+		if(count > 0) markedObj = objPt;
+	    }
+	    // Seleção da elipse
+	    // else if(){
+	    // }
+	    objPt = objPt->nextObj;
 	}
+	if(markedLine != NULL) markedLine->marked = true;
 	updateGL();
     }
 }
@@ -501,12 +489,17 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 
-void clean(){
+void clearMouse(){
     click = false;
     pos1X = 0;
     pos1Y = 0;
     pos2X = 0;
     pos2Y = 0;
+}
+
+void clearMarkers(){
+    markedLine = NULL;
+    markedObj = NULL;
 }
 
 void delSelected(){
@@ -543,7 +536,6 @@ void delSelected(){
 	    markedLine->nextLine->v1.y = (markedLine->v1.y + markedLine->v2.y) / 2;
 	}
 	delete markedLine;
-	markedLine = NULL;
     }
     if(markedObj != NULL){
 	if(markedObj->previousObj == NULL && markedObj->nextObj == NULL){
@@ -565,6 +557,7 @@ void delSelected(){
 	delete markedLine;
 	markedObj = NULL;
     }
+    clearMarkers();
 }
 
 void GLWidget::mouseClick(){
@@ -582,34 +575,35 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
 	case Qt::Key_1:
 	    OPTION = 1;
-	    clean();
+	    clearMouse();
 	    break;
 	case Qt::Key_2:
 	    OPTION = 2;
-	    clean();
+	    clearMouse();
 	    break;
 	case Qt::Key_3:
 	    OPTION = 3;
-	    clean();
+	    clearMouse();
 	    break;
 	case Qt::Key_7:
 	    OPTION = 7;
-	    clean();
+	    clearMouse();
 	    break;
 	case Qt::Key_4:
 	    OPTION = 4;
-	    clean();
+	    clearMouse();
 	    break;
 	case Qt::Key_8:
 	    OPTION = 8;
-	    clean();
+	    clearMouse();
 	    break;
 	case Qt::Key_9:
 	    OPTION = 9;
-	    clean();
+	    clearMouse();
 	    break;
 	case Qt::Key_Delete:
 	    delSelected();
+	    clearMouse();
 	    updateGL();
 	case Qt::Key_M:
 	    updateGL();
