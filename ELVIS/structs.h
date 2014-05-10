@@ -1,23 +1,21 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 // Vértice, linha, objeto, respectivamente
+struct obj;
+
 struct vertex{
     int x;
     int y;
 };
 
-struct obj;
-
 struct line{
     obj* top;
     line* nextLine;
     line* previousLine;
-    bool marked;
     vertex v1, v2;
     line(){
         nextLine = NULL;
         previousLine = NULL;
-	marked = false;
     }
 };
 
@@ -65,6 +63,8 @@ struct obj{
     rectangle* rec;
     color* fillColor;
     color* lineColor;
+    obj* group;
+    obj* endGroup;
     bool marked;
     obj(){
         nextObj = NULL;
@@ -75,6 +75,8 @@ struct obj{
         elip = NULL;
 	rec = NULL;
 	fillColor = NULL;
+	group = NULL;
+	endGroup = NULL;
 	lineColor = new color();
 	marked = false;
     }
