@@ -49,9 +49,9 @@ struct color{
     float g;
     float b;
     color(){
-	r = 0;
-	g = 0;
-	b = 0;
+		r = 0;
+		g = 0;
+		b = 0;
     }
 };
 
@@ -73,10 +73,10 @@ struct obj{
         lastLine = NULL;
         c = NULL;
         elip = NULL;
-	rec = NULL;
-	fillColor = NULL;
-	lineColor = new color();
-	marked = false;
+		rec = NULL;
+		fillColor = NULL;
+		lineColor = new color();
+		marked = false;
     }
 };
 #endif
