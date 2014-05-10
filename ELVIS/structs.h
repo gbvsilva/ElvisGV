@@ -6,7 +6,10 @@ struct vertex{
     int y;
 };
 
+struct obj;
+
 struct line{
+    obj* top;
     line* nextLine;
     line* previousLine;
     bool marked;
@@ -16,6 +19,13 @@ struct line{
         previousLine = NULL;
 	marked = false;
     }
+};
+
+struct rectangle{
+    vertex v1;
+    vertex v2;
+    vertex v3;
+    vertex v4;
 };
 
 struct circle{
@@ -34,6 +44,17 @@ struct elipse {
     }
 };
 
+struct color{
+    float r;
+    float g;
+    float b;
+    color(){
+	r = 0;
+	g = 0;
+	b = 0;
+    }
+};
+
 struct obj{
     obj* nextObj;
     obj* previousObj;
@@ -41,19 +62,21 @@ struct obj{
     line* lastLine;
     circle* c;
     elipse* elip;
-    float r;
-    float g;
-    float b;
+    rectangle* rec;
+    color* fillColor;
+    color* lineColor;
+    bool marked;
     obj(){
         nextObj = NULL;
         previousObj = NULL;
         firstLine = NULL;
         lastLine = NULL;
-        c=NULL;
-        elip=NULL;
-        r = 0;
-        g = 0;
-        b = 0;
+        c = NULL;
+        elip = NULL;
+	rec = NULL;
+	fillColor = NULL;
+	lineColor = new color();
+	marked = false;
     }
 };
 #endif
