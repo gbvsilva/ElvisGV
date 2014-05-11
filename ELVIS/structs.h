@@ -66,6 +66,7 @@ struct obj{
     obj* group;
     obj* endGroup;
     bool marked;
+    bool mainGroup;
     obj(){
         nextObj = NULL;
         previousObj = NULL;
@@ -79,6 +80,7 @@ struct obj{
 	endGroup = NULL;
 	lineColor = new color();
 	marked = false;
+	mainGroup = false;
     }
 };
 #endif
