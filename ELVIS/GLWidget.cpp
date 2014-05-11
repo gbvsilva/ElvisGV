@@ -137,31 +137,38 @@ void GLWidget::paintGL() {
 	    if(objPt->marked == false){
 		objPt->marked = true;
 		if(groupObj == NULL) groupObj = objPt;
-		// TO-DO: DESENHAR VÉRTICES DO RETÂNGULO
 		objPt = objPt->group;
 	    }
 	    // Segunda passagem, desenhar o objeto seguinte
 	    else{
 		if(groupObj == objPt){
 		    groupObj = NULL;
-		    /*
+		    
 		    if((markedObj != NULL && markedObj == objPt) ||
 			    (markedLine != NULL && markedLine == linePt) ||
 			    (markedLine != NULL && markedLine == linePt->previousLine) ||
 			    (objPt->marked == true)){
-			drawSelSquareMarker((objPt->rec->v1.x - panX)*zoom, (objPt->rec->v1.y - panY)*zoom, 5);
-			drawSelSquareMarker((objPt->rec->v2.x - panX)*zoom, (objPt->rec->v2.y - panY)*zoom, 5);
-			drawSelSquareMarker((objPt->rec->v3.x - panX)*zoom, (objPt->rec->v3.y - panY)*zoom, 5);
-			drawSelSquareMarker((objPt->rec->v4.x - panX)*zoom, (objPt->rec->v4.y - panY)*zoom, 5);
+			drawSelSquareMarker((objPt->rec->v1.x - panX)*zoom,
+				(objPt->rec->v1.y - panY)*zoom, 5);
+			drawSelSquareMarker((objPt->rec->v2.x - panX)*zoom,
+				(objPt->rec->v2.y - panY)*zoom, 5);
+			drawSelSquareMarker((objPt->rec->v3.x - panX)*zoom,
+				(objPt->rec->v3.y - panY)*zoom, 5);
+			drawSelSquareMarker((objPt->rec->v4.x - panX)*zoom,
+				(objPt->rec->v4.y - panY)*zoom, 5);
 		    }
 		    // Caso ela não esteja em um grupo, marcação normal
 		    else if(groupObj == NULL){
-			drawSquareMarker((objPt->rec->v1.x - panX)*zoom, (objPt->rec->v1.y - panY)*zoom, 5);
-			drawSquareMarker((objPt->rec->v2.x - panX)*zoom, (objPt->rec->v2.y - panY)*zoom, 5);
-			drawSquareMarker((objPt->rec->v3.x - panX)*zoom, (objPt->rec->v3.y - panY)*zoom, 5);
-			drawSquareMarker((objPt->rec->v4.x - panX)*zoom, (objPt->rec->v4.y - panY)*zoom, 5);
+			drawSquareMarker((objPt->rec->v1.x - panX)*zoom,
+				(objPt->rec->v1.y - panY)*zoom, 5);
+			drawSquareMarker((objPt->rec->v2.x - panX)*zoom,
+				(objPt->rec->v2.y - panY)*zoom, 5);
+			drawSquareMarker((objPt->rec->v3.x - panX)*zoom,
+				(objPt->rec->v3.y - panY)*zoom, 5);
+			drawSquareMarker((objPt->rec->v4.x - panX)*zoom,
+				(objPt->rec->v4.y - panY)*zoom, 5);
 		    }
-		    */
+		    
 		}
 		objPt->marked = false;
 		objPt = objPt->nextObj;
@@ -558,6 +565,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		}
 		linePt = linePt->nextLine;
 	    }
+
 	    // Seleção da circunferência
 	    else if(objPt->c != NULL){
 		posDist = sqrt(pow((abs(objPt->c->center.x - pos1X)), 2) +
@@ -565,6 +573,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		if(objPt->c->radius > posDist - clipSize &&
 			objPt->c->radius < posDist + clipSize) markedObj = objPt;
 	    }
+
 	    // Seleção de retângulo
 	    else if(objPt->rec != NULL){
 		foundLine = true;
@@ -610,6 +619,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		foundLine = false;
 
 	    }
+
 	    // Seleção da elipse
 	    // else if(){
 	    // }
@@ -788,6 +798,7 @@ void GLWidget::createGroup(){
 	lastObj->rec->v3.x = 0;
 	objPt = lastObj->group;
 	while(objPt != lastObj){
+	    // Tamanho das polilinhas
 	    if(objPt->firstLine != NULL){
 		linePt = objPt->firstLine;
 		while(linePt != NULL){
@@ -810,6 +821,7 @@ void GLWidget::createGroup(){
 		    linePt = linePt->nextLine;
 		}
 	    }
+	    // Tamanho dos retângulos
 	    else if(objPt->rec != NULL){
 		recPt = objPt->rec;
 		if(recPt->v1.x < recPt->v2.x){
@@ -829,10 +841,24 @@ void GLWidget::createGroup(){
 		    if(objPt->rec->v3.y < recPt->v1.y) objPt->rec->v3.y = recPt->v1.y;
 		}
 	    }
+	    // Tamanho das circunferências
+	    else if(objPt->c != NULL){
+		if(objPt->rec->v1.x > circPt->center.x - circPt->radius)
+		    objPt->rec->v1.x = circPt->center.x - circPt->radius;
+		if(objPt->rec->v1.y > circPt->center.y - circPt->radius)
+		    objPt->rec->v1.y = circPt->center.y - circPt->radius;
+		if(objPt->rec->v2.x < circPt->center.x + circPt->radius)
+		    objPt->rec->v2.x = circPt->center.x + circPt->radius;
+		if(objPt->rec->v2.y < circPt->center.y + circPt->radius)
+		    objPt->rec->v2.y = circPt->center.y + circPt->radius;
+	    }
 	    objPt = objPt->nextObj;
 	}
+	lastObj->rec->v2.x = lastObj->rec->v1.x;
+	lastObj->rec->v2.y = lastObj->rec->v3.y;
+	lastObj->rec->v4.x = lastObj->rec->v3.x;
+	lastObj->rec->v4.y = lastObj->rec->v1.y;
     }
-    //*/
     clearMarkers();
 }
 
