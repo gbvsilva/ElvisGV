@@ -28,6 +28,7 @@ protected:
     void drawSquareMarker(int x, int y, int size);
     void drawSelSquareMarker(int x, int y, int size);
     void createGroup();
+    void undoGroup();
 };
 
 #endif // GLWIDGET_H

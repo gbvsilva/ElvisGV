@@ -844,14 +844,15 @@ void GLWidget::createGroup(){
 	    }
 	    // Tamanho das circunferências
 	    else if(objPt->c != NULL){
+		circPt = objPt->c;
 		if(lastObj->rec->v1.x > circPt->center.x - circPt->radius)
 		    lastObj->rec->v1.x = circPt->center.x - circPt->radius;
 		if(lastObj->rec->v1.y > circPt->center.y - circPt->radius)
 		    lastObj->rec->v1.y = circPt->center.y - circPt->radius;
-		if(lastObj->rec->v2.x < circPt->center.x + circPt->radius)
-		    lastObj->rec->v2.x = circPt->center.x + circPt->radius;
-		if(lastObj->rec->v2.y < circPt->center.y + circPt->radius)
-		    lastObj->rec->v2.y = circPt->center.y + circPt->radius;
+		if(lastObj->rec->v3.x < circPt->center.x + circPt->radius)
+		    lastObj->rec->v3.x = circPt->center.x + circPt->radius;
+		if(lastObj->rec->v3.y < circPt->center.y + circPt->radius)
+		    lastObj->rec->v3.y = circPt->center.y + circPt->radius;
 	    }
 	    objPt = objPt->nextObj;
 
@@ -864,7 +865,18 @@ void GLWidget::createGroup(){
     clearMarkers();
 }
 
-void undoGroup(){
+void GLWidget::undoGroup(){
+    if(markedObj != NULL){
+	if(markedObj->group != NULL){
+	    markedObj->group->previousObj = markedObj->previousObj;
+	    if(markedObj != firstObj) markedObj->previousObj->nextObj = markedObj->group;
+	    else firstObj = markedObj->group;
+	    markedObj->endGroup->nextObj = markedObj->nextObj;
+	    if(markedObj != lastObj) markedObj->nextObj->previousObj = markedObj->endGroup;
+	    else lastObj = markedObj->endGroup;
+	}
+    }
+    clearMarkers();
 }
 
 void GLWidget::mouseClick(){
@@ -984,6 +996,7 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
 	case Qt::Key_U:
 	    undoGroup();
+	    updateGL();
 	    break;
 	case Qt::Key_D:
 	    objDebug();
