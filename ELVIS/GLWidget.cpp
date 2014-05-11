@@ -639,7 +639,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             lastObj->nextObj = copy(markedObj);
             lastObj->nextObj->previousObj = lastObj;
             lastObj = lastObj->nextObj;
-            std::cout << "Objeto COPIADO\n";
         }
     }
     // Screen pan
@@ -718,13 +717,13 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
                 //drawSelSquareMarker((lastObj->c->center.x - panX + lastObj->c->radius), (lastObj->c->center.y - panY), 5, 1);
             }else if(lastObj->rec != NULL) {
                 lastObj->rec->v1.x = event->x() - (pos1X - markedObj->rec->v1.x);
-                lastObj->rec->v1.y = pos1Y;
-                lastObj->rec->v2.x = event->x() - (pos1X - markedObj->rec->v2.x);
-                lastObj->rec->v2.y = (mouseH - event->y()) - (pos2Y - markedObj->rec->v2.y);
-                lastObj->rec->v3.x = event->x() - (pos2X - markedObj->rec->v3.x);
-                lastObj->rec->v3.y = (mouseH - event->y()) - (pos2Y - markedObj->rec->v3.y);
-                lastObj->rec->v4.x = event->x() - (pos2X - markedObj->rec->v4.x);
-                lastObj->rec->v4.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v4.y);
+                lastObj->rec->v1.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v1.y);
+                lastObj->rec->v2.x = lastObj->rec->v1.x;
+                lastObj->rec->v2.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v2.y);
+                lastObj->rec->v3.x = event->x() - (pos1X - markedObj->rec->v3.x);
+                lastObj->rec->v3.y = lastObj->rec->v2.y;
+                lastObj->rec->v4.x = lastObj->rec->v3.x;
+                lastObj->rec->v4.y = lastObj->rec->v1.y;
             }
 
         }
