@@ -83,6 +83,7 @@ void GLWidget::drawSelSquareMarker(int x, int y, int size){
 
 void GLWidget::paintGL() {
     obj* objPt;
+    obj* groupObj;
     line* linePt;
     circle* circPt;
     elipse* elipPt;
@@ -91,18 +92,38 @@ void GLWidget::paintGL() {
 
     gridSize = 40;
     objPt = firstObj;
+    groupObj = NULL;
 
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
 
     //Desenho da grade
     if(grid){
+	/*
 	glColor3f(0.9, 0.9, 0.9);
-	for(int i = -gridSize; i < screenW+gridSize; i+= gridSize) bresenham((i + gridSize/2 - panX % gridSize)*zoom, 0, (i + gridSize/2 - panX % gridSize)*zoom, (screenH)*zoom);
-	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize) bresenham(0, (i+gridSize/2 - panY % gridSize)*zoom, (screenW)*zoom, (i+gridSize/2 - panY % gridSize)*zoom);
+	for(int i = -gridSize; i < (screenW+gridSize)/zoom; i+= gridSize)
+	    bresenham((i + gridSize/2 - panX % gridSize)*zoom, 0, (i + gridSize/2 - panX % gridSize)*zoom, (screenH)/zoom);
+	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize)
+	    bresenham(0, (i+gridSize/2 - panY % gridSize)*zoom, (screenW)/zoom, (i+gridSize/2 - panY % gridSize)*zoom);
+
 	glColor3f(0.7, 0.7, 0.7);
-	for(int i = -gridSize; i < screenW+gridSize; i+= gridSize) bresenham((i - panX % gridSize)*zoom, 0, (i - panX % gridSize)*zoom, (screenH)*zoom);
-	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize) bresenham(0, (i - panY % gridSize)*zoom, (screenW)*zoom, (i - panY % gridSize)*zoom);
+	for(int i = -gridSize; i < (screenW+gridSize)/zoom; i+= gridSize)
+	    bresenham((i - panX % gridSize)*zoom, 0, (i - panX % gridSize)*zoom, (screenH)/zoom);
+	for(int i = -gridSize; i < screenH+gridSize; i+= gridSize)
+	    bresenham(0, (i - panY % gridSize)*zoom, (screenW)/zoom, (i - panY % gridSize)*zoom);
+	*/
+	
+	glColor3f(0.9, 0.9, 0.9);
+	for(int i = gridSize/2; i <= screenW/zoom; i+= gridSize)
+	    bresenham((i - panX % gridSize)*zoom, 0, (i - panX % gridSize)*zoom, screenH);
+	for(int i = gridSize/2; i <= screenH/zoom; i+= gridSize)
+	    bresenham(0, (i - panY % gridSize)*zoom, screenW, (i - panY % gridSize)*zoom);
+
+	glColor3f(0.7, 0.7, 0.7);
+	for(int i = 0; i <= screenW/zoom; i+= gridSize)
+	    bresenham((i - panX % gridSize)*zoom, 0, (i - panX % gridSize)*zoom, screenH);
+	for(int i = 0; i <= screenH/zoom; i+= gridSize)
+	    bresenham(0, (i - panY % gridSize)*zoom, screenW, (i - panY % gridSize)*zoom);
     }
     // Desenho dos objetos
     while(objPt != NULL){
@@ -113,13 +134,35 @@ void GLWidget::paintGL() {
 	// Caso o objeto seja um grupo
 	if(objPt->group != NULL){
 	    // Primeira passagem, desenhar todos os objetos do conjunto
-	    if(objPt == false){
+	    if(objPt->marked == false){
 		objPt->marked = true;
+		if(groupObj == NULL) groupObj = objPt;
 		// TO-DO: DESENHAR VÉRTICES DO RETÂNGULO
 		objPt = objPt->group;
 	    }
 	    // Segunda passagem, desenhar o objeto seguinte
 	    else{
+		if(groupObj == objPt){
+		    groupObj = NULL;
+		    /*
+		    if((markedObj != NULL && markedObj == objPt) ||
+			    (markedLine != NULL && markedLine == linePt) ||
+			    (markedLine != NULL && markedLine == linePt->previousLine) ||
+			    (objPt->marked == true)){
+			drawSelSquareMarker((objPt->rec->v1.x - panX)*zoom, (objPt->rec->v1.y - panY)*zoom, 5);
+			drawSelSquareMarker((objPt->rec->v2.x - panX)*zoom, (objPt->rec->v2.y - panY)*zoom, 5);
+			drawSelSquareMarker((objPt->rec->v3.x - panX)*zoom, (objPt->rec->v3.y - panY)*zoom, 5);
+			drawSelSquareMarker((objPt->rec->v4.x - panX)*zoom, (objPt->rec->v4.y - panY)*zoom, 5);
+		    }
+		    // Caso ela não esteja em um grupo, marcação normal
+		    else if(groupObj == NULL){
+			drawSquareMarker((objPt->rec->v1.x - panX)*zoom, (objPt->rec->v1.y - panY)*zoom, 5);
+			drawSquareMarker((objPt->rec->v2.x - panX)*zoom, (objPt->rec->v2.y - panY)*zoom, 5);
+			drawSquareMarker((objPt->rec->v3.x - panX)*zoom, (objPt->rec->v3.y - panY)*zoom, 5);
+			drawSquareMarker((objPt->rec->v4.x - panX)*zoom, (objPt->rec->v4.y - panY)*zoom, 5);
+		    }
+		    */
+		}
 		objPt->marked = false;
 		objPt = objPt->nextObj;
 	    }
@@ -132,32 +175,41 @@ void GLWidget::paintGL() {
 		while(linePt != NULL) {
 		    // Desenho de uma linha
 		    glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-		    bresenham((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, (linePt->v2.x - panX)*zoom, (linePt->v2.y - panY)*zoom);
-		    // Caso a linha ou objeto esteja selecionado, usar marcação especial
-		    if((markedObj != NULL && markedObj == objPt) || (markedLine != NULL && markedLine == linePt) || (markedLine != NULL && markedLine == linePt->previousLine) || (objPt->marked == true)){
+		    bresenham((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom,
+			    (linePt->v2.x - panX)*zoom, (linePt->v2.y - panY)*zoom);
+		    // Caso a linha ou objeto esteja selecionado , usar marcação especial
+		    if((markedObj != NULL && markedObj == objPt) ||
+			    (markedLine != NULL && markedLine == linePt) ||
+			    (markedLine != NULL && markedLine == linePt->previousLine) ||
+			    (objPt->marked == true)){
 			drawSelSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
 		    }
 		    // Caso ela não esteja em um grupo, marcação normal
-		    else if(objPt->group == NULL){
+		    else if(groupObj == NULL){
 			drawSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
 		    }
 		    linePt = linePt->nextLine;
 		}
 		// Caso a linha ou objeto esteja selecionado, usar marcação especial
 		if(markedLine == objPt->lastLine || markedObj == objPt || objPt->marked == true){
-		    drawSelSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5);
+		    drawSelSquareMarker((objPt->lastLine->v2.x - panX)*zoom,
+			    (objPt->lastLine->v2.y - panY)*zoom, 5);
 		}
 		// Caso ela não esteja em um grupo, marcação normal
-		else if(objPt->group == NULL){
-		    drawSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5);
+		else if(groupObj == NULL){
+		    drawSquareMarker((objPt->lastLine->v2.x - panX)*zoom,
+			    (objPt->lastLine->v2.y - panY)*zoom, 5);
 		}
 	    }
 	    // Desenho de retângulo
 	    else if(recPt != NULL){
 		glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-		bresenham((recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom, (recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom);
-		bresenham((recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom, (recPt->v3.x - panX)*zoom, (recPt->v3.y - panY)*zoom);
-		bresenham((recPt->v3.x - panX)*zoom, (recPt->v3.y - panY)*zoom, (recPt->v4.x - panX)*zoom, (recPt->v4.y - panY)*zoom);
+		bresenham((recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom,
+			(recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom);
+		bresenham((recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom,
+			(recPt->v3.x - panX)*zoom, (recPt->v3.y - panY)*zoom);
+		bresenham((recPt->v3.x - panX)*zoom, (recPt->v3.y - panY)*zoom,
+			(recPt->v4.x - panX)*zoom, (recPt->v4.y - panY)*zoom);
 		bresenham((recPt->v4.x - panX)*zoom, (recPt->v4.y - panY)*zoom, (recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom);
 		// Caso esteja selecionado, marcação especial
 		if(markedObj != NULL && markedObj == objPt){
@@ -178,9 +230,15 @@ void GLWidget::paintGL() {
 	    else if(circPt != NULL) {
 		glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
 		midPtCircle((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, (circPt->radius)*zoom);
-		if(markedObj != NULL && markedObj == objPt) glColor3f(1, 0, 0);
-		drawSquareMarker((circPt->center.x - panX), (circPt->center.y - panY), 5);
-		drawSquareMarker((circPt->center.x - panX + circPt->radius), (circPt->center.y - panY), 5);
+		if(markedObj != NULL && markedObj == objPt){
+		    drawSelSquareMarker((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, 5);
+		    drawSelSquareMarker((circPt->center.x - panX + circPt->radius)*zoom, (circPt->center.y - panY)*zoom,  5);
+		}
+		// Caso contrário
+		else{
+		    drawSquareMarker((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, 5);
+		    drawSquareMarker((circPt->center.x - panX + circPt->radius)*zoom, (circPt->center.y - panY)*zoom,  5);
+		}
 	    }
 	    // Desenho de elipse
 	    else if(elipPt != NULL) {
@@ -334,6 +392,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    click = true;
 	}
 	else{
+	    rec = lastObj->rec;
 	    pos2X = event->x()/zoom + panX;
 	    pos2Y = (mouseH - event->y())/zoom + panY;
 	    rec->v2.y = pos2Y;
@@ -375,27 +434,32 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     // Seleção de linha
     else if(OPTION == 8){
-	bool foundLine = true;
+	bool foundLine;
 	objPt = firstObj;
 	float m;
 	int x0, y0, x1, y1, clipSize;
+	
 	clipSize = 4;
 	clearMarkers();
 
 	pos1X = event->x()/zoom + panX;
 	pos1Y = (mouseH - event->y())/zoom + panY;
-	markedLine = NULL;
-	markedObj = NULL;
+	
 	while(objPt != NULL){
-	    // Seleção por linha
 	    linePt = objPt->firstLine;
 	    while(linePt != NULL){
+		
+		// Seleção de polilinhas
 		foundLine = true;
 		// Casos trivias
-		if(linePt->v1.x < pos1X - clipSize && linePt->v2.x < pos1X - clipSize) foundLine = false;
-		else if(linePt->v1.y < pos1Y - clipSize && linePt->v2.y < pos1Y - clipSize) foundLine = false;
-		else if(linePt->v1.x > pos1X + clipSize && linePt->v2.x > pos1X + clipSize) foundLine = false;
-		else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
+		if(linePt->v1.x < pos1X - clipSize &&
+			linePt->v2.x < pos1X - clipSize) foundLine = false;
+		else if(linePt->v1.y < pos1Y - clipSize &&
+			linePt->v2.y < pos1Y - clipSize) foundLine = false;
+		else if(linePt->v1.x > pos1X + clipSize &&
+			linePt->v2.x > pos1X + clipSize) foundLine = false;
+		else if(linePt->v1.y > pos1Y + clipSize &&
+			linePt->v2.y > pos1Y + clipSize) foundLine = false;
 		// Casos não triviais
 		else{
 		    foundLine = false;
@@ -412,13 +476,13 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			y1 = linePt->v2.y;
 		    }
 		    m = (float)(y1-y0)/(float)(x1-x0);
-		    if(	    y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
+		    if( y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
 			    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
-		    else if(    y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
+		    else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
 			    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
-		    else if(    x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
+		    else if(x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
 			    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
-		    else if(    x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
+		    else if(x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
 			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		}
 		if(foundLine == true){
@@ -432,10 +496,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     // Seleção de objeto
     else if(OPTION == 9 || OPTION == 10){
-	bool foundLine = true;
+	bool foundLine;
 	float m;
 	int posDist;
-	int x0, y0, x1, y1, count;
+	int x0, y0, x1, y1;
 	int clipSize = 4;
 
 	clearMarkers();
@@ -451,10 +515,14 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    if(linePt != NULL) while(linePt != NULL){
 		foundLine = true;
 		// Casos trivias
-		if(linePt->v1.x < pos1X - clipSize && linePt->v2.x < pos1X - clipSize) foundLine = false;
-		else if(linePt->v1.y < pos1Y - clipSize && linePt->v2.y < pos1Y - clipSize) foundLine = false;
-		else if(linePt->v1.x > pos1X + clipSize && linePt->v2.x > pos1X + clipSize) foundLine = false;
-		else if(linePt->v1.y > pos1Y + clipSize && linePt->v2.y > pos1Y + clipSize) foundLine = false;
+		if(linePt->v1.x < pos1X - clipSize &&
+			linePt->v2.x < pos1X - clipSize) foundLine = false;
+		else if(linePt->v1.y < pos1Y - clipSize &&
+			linePt->v2.y < pos1Y - clipSize) foundLine = false;
+		else if(linePt->v1.x > pos1X + clipSize &&
+			linePt->v2.x > pos1X + clipSize) foundLine = false;
+		else if(linePt->v1.y > pos1Y + clipSize &&
+			linePt->v2.y > pos1Y + clipSize) foundLine = false;
 		// Casos não triviais
 		else{
 		    foundLine = false;
@@ -471,10 +539,14 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			y1 = linePt->v2.y;
 		    }
 		    m = (float)(y1-y0)/(float)(x1-x0);
-		    if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
-		    else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize && y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
-		    else if(x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize && x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
-		    else if(x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize && x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+		    if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
+			    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+		    else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
+			    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+		    else if(x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
+			    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+		    else if(x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
+			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
 		}
 		if(foundLine == true){
 		    // Seleção para agrupamento
@@ -488,37 +560,55 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 	    // Seleção da circunferência
 	    else if(objPt->c != NULL){
-		posDist = sqrt(pow((abs(objPt->c->center.x - pos1X)), 2) + pow((abs(objPt->c->center.y - pos1Y)), 2));
-		if(objPt->c->radius > posDist - clipSize && objPt->c->radius < posDist + clipSize) markedObj = objPt;
+		posDist = sqrt(pow((abs(objPt->c->center.x - pos1X)), 2) +
+			pow((abs(objPt->c->center.y - pos1Y)), 2));
+		if(objPt->c->radius > posDist - clipSize &&
+			objPt->c->radius < posDist + clipSize) markedObj = objPt;
 	    }
 	    // Seleção de retângulo
 	    else if(objPt->rec != NULL){
 		foundLine = true;
-		if(objPt->rec->v1.x < pos1X - clipSize && objPt->rec->v2.x < pos1X - clipSize) foundLine = false;
-		else if(objPt->rec->v1.y < pos1Y - clipSize && objPt->rec->v2.y < pos1Y - clipSize) foundLine = false;
-		else if(objPt->rec->v1.x > pos1X + clipSize && objPt->rec->v2.x > pos1X + clipSize) foundLine = false;
-		else if(objPt->rec->v1.y > pos1Y + clipSize && objPt->rec->v2.y > pos1Y + clipSize) foundLine = false;
+		if(objPt->rec->v1.x < pos1X - clipSize &&
+			objPt->rec->v2.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v1.y < pos1Y - clipSize &&
+			objPt->rec->v2.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v1.x > pos1X + clipSize &&
+			objPt->rec->v2.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v1.y > pos1Y + clipSize &&
+			objPt->rec->v2.y > pos1Y + clipSize) foundLine = false;
 		if(foundLine == true) markedObj = objPt;
 		foundLine = true;
-		if(objPt->rec->v2.x < pos1X - clipSize && objPt->rec->v3.x < pos1X - clipSize) foundLine = false;
-		else if(objPt->rec->v2.y < pos1Y - clipSize && objPt->rec->v3.y < pos1Y - clipSize) foundLine = false;
-		else if(objPt->rec->v2.x > pos1X + clipSize && objPt->rec->v3.x > pos1X + clipSize) foundLine = false;
-		else if(objPt->rec->v2.y > pos1Y + clipSize && objPt->rec->v3.y > pos1Y + clipSize) foundLine = false;
+		if(objPt->rec->v2.x < pos1X - clipSize &&
+			objPt->rec->v3.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v2.y < pos1Y - clipSize &&
+			objPt->rec->v3.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v2.x > pos1X + clipSize &&
+			objPt->rec->v3.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v2.y > pos1Y + clipSize &&
+			objPt->rec->v3.y > pos1Y + clipSize) foundLine = false;
 		if(foundLine == true) markedObj = objPt;
 		foundLine = true;
-		if(objPt->rec->v3.x < pos1X - clipSize && objPt->rec->v4.x < pos1X - clipSize) foundLine = false;
-		else if(objPt->rec->v3.y < pos1Y - clipSize && objPt->rec->v4.y < pos1Y - clipSize) foundLine = false;
-		else if(objPt->rec->v3.x > pos1X + clipSize && objPt->rec->v4.x > pos1X + clipSize) foundLine = false;
-		else if(objPt->rec->v3.y > pos1Y + clipSize && objPt->rec->v4.y > pos1Y + clipSize) foundLine = false;
+		if(objPt->rec->v3.x < pos1X - clipSize &&
+			objPt->rec->v4.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v3.y < pos1Y - clipSize &&
+			objPt->rec->v4.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v3.x > pos1X + clipSize &&
+			objPt->rec->v4.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v3.y > pos1Y + clipSize &&
+			objPt->rec->v4.y > pos1Y + clipSize) foundLine = false;
 		if(foundLine == true) markedObj = objPt;
 		foundLine = true;
-		if(objPt->rec->v4.x < pos1X - clipSize && objPt->rec->v1.x < pos1X - clipSize) foundLine = false;
-		else if(objPt->rec->v4.y < pos1Y - clipSize && objPt->rec->v1.y < pos1Y - clipSize) foundLine = false;
-		else if(objPt->rec->v4.x > pos1X + clipSize && objPt->rec->v1.x > pos1X + clipSize) foundLine = false;
-		else if(objPt->rec->v4.y > pos1Y + clipSize && objPt->rec->v1.y > pos1Y + clipSize) foundLine = false;
+		if(objPt->rec->v4.x < pos1X - clipSize &&
+			objPt->rec->v1.x < pos1X - clipSize) foundLine = false;
+		else if(objPt->rec->v4.y < pos1Y - clipSize &&
+			objPt->rec->v1.y < pos1Y - clipSize) foundLine = false;
+		else if(objPt->rec->v4.x > pos1X + clipSize &&
+			objPt->rec->v1.x > pos1X + clipSize) foundLine = false;
+		else if(objPt->rec->v4.y > pos1Y + clipSize &&
+			objPt->rec->v1.y > pos1Y + clipSize) foundLine = false;
 		if(foundLine == true) markedObj = objPt;
 		foundLine = false;
-		
+
 	    }
 	    // Seleção da elipse
 	    // else if(){
@@ -592,6 +682,7 @@ void GLWidget::clearMouse(){
 
 void GLWidget::clearMarkers(){
     markedLine = NULL;
+    markedLine2 = NULL;
     markedObj = NULL;
 }
 
@@ -645,37 +736,104 @@ void GLWidget::delSelected(){
     clearMarkers();
 }
 
-void createGroup(){
-    obj* objPt;    
+void GLWidget::createGroup(){
     bool newGroup;
+    obj* objPt;
+    obj* objPt2;
+    obj* groupObj;
+    line* linePt;
+    circle* circPt;
+    elipse* elipPt;
+    rectangle* recPt;
+
     newGroup = false;
     objPt = firstObj;
+
     while(objPt != NULL){
+	objPt2 = objPt->nextObj;
 	if(objPt->marked == true){
+	    objPt->marked = false;
 	    if(newGroup == false){
 		newGroup = true;
 		lastObj->nextObj = new obj();
+		lastObj->nextObj->previousObj = lastObj;
 		lastObj = lastObj->nextObj;
+		lastObj->rec = new rectangle();
 		lastObj->group = objPt;
 		if(objPt->nextObj != NULL) objPt->nextObj->previousObj = objPt->previousObj;
 		if(objPt->previousObj != NULL) objPt->previousObj->nextObj = objPt->nextObj;
+		else firstObj = objPt->nextObj;
 		objPt->previousObj = lastObj;
-		objPt->nextObj = lastObj->nextObj;
+		objPt->nextObj = lastObj;
 		lastObj->endGroup = objPt;
 	    }
 	    else{
 		if(objPt->nextObj != NULL) objPt->nextObj->previousObj = objPt->previousObj;
 		if(objPt->previousObj != NULL) objPt->previousObj->nextObj = objPt->nextObj;
+		else firstObj = objPt->nextObj;
 		markedObj->nextObj = objPt;
 		objPt->previousObj = markedObj;
-		objPt->nextObj = lastObj->nextObj;
+		objPt->nextObj = lastObj;
 		lastObj->endGroup = objPt;
 	    }
-	    objPt->marked = false;
 	    markedObj = objPt;
 	}
-	objPt = objPt->nextObj;
+	objPt = objPt2;
     }
+    // Cálculo do tamanho do grupo
+    if(newGroup == true){
+	lastObj->rec->v1.x = screenW;
+	lastObj->rec->v1.y = screenH;
+	lastObj->rec->v3.x = 0;
+	lastObj->rec->v3.x = 0;
+	objPt = lastObj->group;
+	while(objPt != lastObj){
+	    if(objPt->firstLine != NULL){
+		linePt = objPt->firstLine;
+		while(linePt != NULL){
+		    if(linePt->v1.x < linePt->v2.x){
+			if(lastObj->rec->v1.x > linePt->v1.x) lastObj->rec->v1.x = linePt->v1.x;
+			if(lastObj->rec->v3.x < linePt->v2.x) lastObj->rec->v3.x = linePt->v2.x;
+		    }
+		    else{
+			if(lastObj->rec->v1.x > linePt->v2.x) lastObj->rec->v1.x = linePt->v2.x;
+			if(lastObj->rec->v3.x < linePt->v1.x) lastObj->rec->v3.x = linePt->v1.x;
+		    }
+		    if(linePt->v1.y < linePt->v2.y){
+			if(lastObj->rec->v1.y > linePt->v1.y) lastObj->rec->v1.y = linePt->v1.y;
+			if(lastObj->rec->v3.y < linePt->v2.y) lastObj->rec->v3.y = linePt->v2.y;
+		    }
+		    else{
+			if(lastObj->rec->v1.y > linePt->v2.y) lastObj->rec->v1.y = linePt->v2.y;
+			if(lastObj->rec->v3.y < linePt->v1.y) lastObj->rec->v3.y = linePt->v1.y;
+		    }
+		    linePt = linePt->nextLine;
+		}
+	    }
+	    else if(objPt->rec != NULL){
+		recPt = objPt->rec;
+		if(recPt->v1.x < recPt->v2.x){
+		    if(objPt->rec->v1.x > recPt->v1.x) objPt->rec->v1.x = recPt->v1.x;
+		    if(objPt->rec->v3.x < recPt->v3.x) objPt->rec->v3.x = recPt->v3.x;
+		}
+		else{
+		    if(objPt->rec->v1.x > recPt->v3.x) objPt->rec->v1.x = recPt->v3.x;
+		    if(objPt->rec->v3.x < recPt->v1.x) objPt->rec->v3.x = recPt->v1.x;
+		}
+		if(recPt->v1.y < recPt->v2.y){
+		    if(objPt->rec->v1.y > recPt->v1.y) objPt->rec->v1.y = recPt->v1.y;
+		    if(objPt->rec->v3.y < recPt->v3.y) objPt->rec->v3.y = recPt->v3.y;
+		}
+		else{
+		    if(objPt->rec->v1.y > recPt->v3.y) objPt->rec->v1.y = recPt->v3.y;
+		    if(objPt->rec->v3.y < recPt->v1.y) objPt->rec->v3.y = recPt->v1.y;
+		}
+	    }
+	    objPt = objPt->nextObj;
+	}
+    }
+    //*/
+    clearMarkers();
 }
 
 void undoGroup(){
@@ -692,20 +850,36 @@ void GLWidget::mouseMovement(){
 void objDebug(){
     obj* objPt;
     int count;
+    
     count = 0;
-
     objPt = firstObj;
-    printf("\n--DEBUG--\n");
+
+    printf("\n"); 
     while(objPt != NULL){
 	printf("%i: ", count);
-	if(objPt->firstLine != NULL) printf("line ");
-	if(objPt->rec != NULL){
+	if(objPt->marked == true) printf("TRUE ");
+	else printf("FALSE ");
+	
+	if(objPt->group != NULL){
+	    if(objPt->marked == false){
+		printf("group < ");
+		objPt->marked = true;
+	    }
+	    else{
+		printf("group > ");
+		objPt->marked = false;
+	    }
+	}
+	else if(objPt->firstLine != NULL) printf("line ");
+	else if(objPt->rec != NULL){
 	    printf("rec %i-%i %i-%i %i-%i %i-%i ", objPt->rec->v1.x, objPt->rec->v1.y, objPt->rec->v2.x ,objPt->rec->v2.y, objPt->rec->v3.x, objPt->rec->v3.y, objPt->rec->v4.x, objPt->rec->v4.y);
 	}
-	if(objPt->c != NULL) printf("circle ");
-	if(objPt->elip != NULL) printf("ellipse ");
-	if(objPt->group != NULL) printf("group ");
-	objPt = objPt->nextObj;
+	else if(objPt->c != NULL) printf("circle ");
+	else if(objPt->elip != NULL) printf("ellipse ");
+	if(objPt == firstObj) printf("FIRSTOBJ ");
+	else if(objPt == lastObj) printf("LASTOBJ ");
+	if(objPt->group != NULL && objPt->marked == true) objPt = objPt->group;
+	else objPt = objPt->nextObj;
 	printf("\n");
 	count++;
     }
