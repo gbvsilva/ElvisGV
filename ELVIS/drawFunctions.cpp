@@ -1,18 +1,18 @@
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glu.h>
 #include "structs.h"
 #include "drawFunctions.h"
+#define ROUND(a) ((int) (a+0.5))
 
 void bresenham( int x1, int y1, int x2, int y2 ) {
     vertex p1, p2;
     long dist;
     int i, varX, varY, x, y, pk;
-    p1.x = round( x1 );
-    p1.y = round( y1 );
-    p2.x = round( x2 );
-    p2.y = round( y2 );
+    p1.x = ROUND( x1 );
+    p1.y = ROUND( y1 );
+    p2.x = ROUND( x2 );
+    p2.y = ROUND( y2 );
     // Casos triviais
     // 0°
     if(p1.y == p2.y){
@@ -314,50 +314,48 @@ void circlePlotPoints(int x, int y, int xc, int yc) {
     glEnd( );
 }
 
-void midPtElipse(int xc, int yc, int rx, int ry) {
-    if(ry < 0) ry *= -1;
-    int rx2 = rx*rx;
-    int ry2 = ry*ry;
-    int twoRx2 = 2*rx2;
-    int twoRy2 = 2*ry2;
-    int p;
-    int x=0;
-    int y=ry;
-    int px=0;
-    int py=twoRx2*y;
+void midPtElipse(int xc, int yc, int a, int b) {
+    long int a2, b2, twoa2, twob2, foura2, fourb2, mx, my;
+    long int d, mida, midb;
+    int x, y;
+
+    if(b < 0) b *= -1;
+    x=0; y=b;
+    a2=a*a; b2=b*b;
+    twoa2 = a2+a2; twob2 = b2+b2;
+    foura2 = twoa2+twoa2; fourb2 = twob2+twob2;
+    mx = fourb2;
+    my = foura2*(y-1);
+    mida = a2 / 2;
+    midb = b2 / 2;
+    d = twob2 - a2 - my/2 - mida;
 
     void elipsePlotPts(int,int,int,int);
-
-
-    elipsePlotPts(xc,yc,x,y);
-    /* Regiao 1 */
-    p = round(ry2 - (rx2*ry) + (0.25*rx2));
-    while(px < py) {
+    // Regiao 1
+    while(d <= my) {
+        elipsePlotPts(xc,yc,x,y);
+        if(d > 0) {
+            d = d - my;
+            y = y - 1;
+            my = my - foura2;
+        }
+        d = d + twob2 + mx;
         ++x;
-        px += twoRy2;
-        if(p < 0) {
-            p += ry2 + px;
-        }else {
-            --y;
-            py -= twoRx2;
-            p += ry2 + px - py;
-        }
-        elipsePlotPts(xc,yc,x,y);
+        mx = mx + fourb2;
     }
+    d = d - (mx + my)/2 + (b2 - a2) + (mida - midb);
 
-    /* Regiao 2 */
-    p = round(ry2*(x+0.5)*(x+0.5) + rx2*(y-1)*(y-1) - rx2*ry2);
-    while(y > 0) {
-        --y;
-        py -= twoRx2;
-        if(p > 0) {
-            p += rx2 - py;
-        }else {
-            ++x;
-            px += twoRy2;
-            p += rx2 - py + px;
-        }
+    // Regiao 2
+    while(y >= 0) {
         elipsePlotPts(xc,yc,x,y);
+        if(d <= 0) {
+            d = d + mx;
+            ++x;
+            mx = mx + fourb2;
+        }
+        d = d + twoa2 - my;
+        --y;
+        my = my - foura2;
     }
 }
 

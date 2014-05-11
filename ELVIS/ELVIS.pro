@@ -14,12 +14,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
     GLWidget.cpp \
-    drawFunctions.cpp
+    drawFunctions.cpp \
+    editFunctions.cpp
 
 HEADERS  += \
     GLWidget.h \
     structs.h \
-    drawFunctions.h
+    drawFunctions.h \
+    editFunctions.h
 
 FORMS    += mainwindow.ui
 
