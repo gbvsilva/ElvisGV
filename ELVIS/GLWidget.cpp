@@ -6,8 +6,9 @@
 #include "stdio.h"
 #include "structs.h"
 #include "drawFunctions.h"
+#include "editFunctions.h"
 
-// Opcao da forma de desenho
+// Opcao de COMANDO
 int OPTION = 1;
 bool grid = true;
 // Posição anterior e atual que o mouse clicou, respectivamente
@@ -23,6 +24,8 @@ int screenH, screenW;
 float zoom = 1;
 // Clique inicial
 bool click = false;
+// Clique para copia
+bool cp = false;
 // Valor necessário para corrigir o mouse
 int mouseH = 0;
 // Ponteiro da cabeça da lista encadeada
@@ -38,7 +41,6 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
     setMouseTracking(true);
 }
-
 
 void GLWidget::initializeGL() {
     glDisable(GL_TEXTURE_2D);
@@ -70,13 +72,16 @@ void GLWidget::drawSquareMarker(int x, int y, int size){
     bresenham(x - size, y + size, x - size, y - size );
 }
 
-void GLWidget::drawSelSquareMarker(int x, int y, int size){
+void GLWidget::drawSelSquareMarker(int x, int y, int size, int color){
     glColor3f(0, 0, 0);
     bresenham(x - size, y - size, x + size, y - size );
     bresenham(x + size, y - size, x + size, y + size );
     bresenham(x + size, y + size, x - size, y + size );
     bresenham(x - size, y + size, x - size, y - size );
-    glColor3f(1, 0, 0);
+    if(color == 1)
+        glColor3f(0, 1, 0);
+    else
+        glColor3f(1, 0, 0);
     for(int i = -size + 1; i <= size - 1; i++){
         bresenham(x - size + 1, y + i, x + size, y + i);
     }
@@ -113,7 +118,10 @@ void GLWidget::paintGL() {
     }
 
     objPt = firstObj;
+    int count=0;
     while(objPt != NULL){
+        ++count;
+
         linePt = objPt->firstLine;
         c = objPt->c;
         elip = objPt->elip;
@@ -126,7 +134,7 @@ void GLWidget::paintGL() {
                 glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
                 bresenham((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, (linePt->v2.x - panX)*zoom, (linePt->v2.y - panY)*zoom);
                 if((markedObj != NULL && markedObj == objPt) || (markedLine != NULL && markedLine == linePt) || (markedLine != NULL && markedLine == linePt->previousLine)){
-                    drawSelSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
+                    drawSelSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5, 0);
                 }
                 else{
                     drawSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
@@ -134,7 +142,7 @@ void GLWidget::paintGL() {
                 linePt = linePt->nextLine;
             }
             if(markedLine == objPt->lastLine || markedObj == objPt){
-                drawSelSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5);
+                drawSelSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5, 0);
             }
             else{
                 drawSquareMarker((objPt->lastLine->v2.x - panX)*zoom, (objPt->lastLine->v2.y - panY)*zoom, 5);
@@ -147,10 +155,10 @@ void GLWidget::paintGL() {
             bresenham((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, (rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom);
             bresenham((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, (rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom);
             if(markedObj != NULL && markedObj == objPt){
-                drawSelSquareMarker((rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom, 5);
-                drawSelSquareMarker((rec->v2.x - panX)*zoom, (rec->v2.y - panY)*zoom, 5);
-                drawSelSquareMarker((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, 5);
-                drawSelSquareMarker((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, 5);
+                drawSelSquareMarker((rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom, 5, 0);
+                drawSelSquareMarker((rec->v2.x - panX)*zoom, (rec->v2.y - panY)*zoom, 5, 0);
+                drawSelSquareMarker((rec->v3.x - panX)*zoom, (rec->v3.y - panY)*zoom, 5, 0);
+                drawSelSquareMarker((rec->v4.x - panX)*zoom, (rec->v4.y - panY)*zoom, 5, 0);
             }
             else{
                 drawSquareMarker((rec->v1.x - panX)*zoom, (rec->v1.y - panY)*zoom, 5);
@@ -162,9 +170,13 @@ void GLWidget::paintGL() {
         else if(c != NULL) {
             glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
             midPtCircle((c->center.x - panX)*zoom, (c->center.y - panY)*zoom, (c->radius)*zoom);
-            if(markedObj != NULL && markedObj == objPt) glColor3f(1, 0, 0);
-            drawSquareMarker((c->center.x - panX), (c->center.y - panY), 5);
-            drawSquareMarker((c->center.x - panX + c->radius), (c->center.y - panY), 5);
+            if(markedObj != NULL && markedObj == objPt) {
+                drawSelSquareMarker((c->center.x - panX), (c->center.y - panY), 5, 0);
+                drawSelSquareMarker((c->center.x - panX + c->radius), (c->center.y - panY), 5, 0);
+            }else {
+                drawSquareMarker((c->center.x - panX), (c->center.y - panY), 5);
+                drawSquareMarker((c->center.x - panX + c->radius), (c->center.y - panY), 5);
+            }
         }
         else if(elip != NULL) {
             glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
@@ -172,6 +184,7 @@ void GLWidget::paintGL() {
         }
         objPt = objPt->nextObj;
     }
+    printf("Objects -> %i\n", count);
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event) {
@@ -325,7 +338,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
         rec->v3.y = pos2Y;
         rec->v4.x = pos2X;
         rec->v4.y = pos1Y;
-        updateGL();
+
     }
     else if(OPTION == 7){
         if(click == false){
@@ -354,7 +367,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             click = false;
         }
         clearMarkers();
-        updateGL();
+
     }
     // Seleção de linha
     else if(OPTION == 8){
@@ -412,9 +425,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             objPt = objPt->nextObj;
         }
         if(markedLine != NULL) markedLine->marked = true;
-        updateGL();
+
     }
-    // Seleção de objeto
+    // SELEÇÃO de objeto
     else if(OPTION == 9){
         bool foundLine = true;
         float m;
@@ -469,7 +482,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             // Seleção da circunferência
             else if(objPt->c != NULL){
                 posDist = sqrt(pow((abs(objPt->c->center.x - pos1X)), 2) + pow((abs(objPt->c->center.y - pos1Y)), 2));
-                if(objPt->c->radius > posDist - clipSize && objPt->c->radius < posDist + clipSize) markedObj = objPt;
+                if(objPt->c->radius > posDist - clipSize && objPt->c->radius < posDist + clipSize) {
+                    /* Apenas esta reconhecendo o ponto de controle da borda e nao o do centro. */
+                    markedObj = objPt;
+                }
             }
             // Seleção de retângulo
             else if(objPt->rec != NULL){
@@ -506,9 +522,16 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             objPt = objPt->nextObj;
         }
         if(markedLine != NULL) markedLine->marked = true;
-        updateGL();
+
+        if(markedObj != NULL && cp==true) {
+            OPTION=21;
+            click=true; // Obj selecionado
+            lastObj->nextObj = copy(markedObj);
+            lastObj->nextObj->previousObj = lastObj;
+            lastObj = lastObj->nextObj;
+        }
     }
-    //Screen pan
+    // Screen pan
     else if(OPTION == 20){
         if(click == false){
             pos1X = (event->x())/zoom;
@@ -521,6 +544,23 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             click = false;
         }
     }
+    // Colocar desenho copiado
+    else if(OPTION == 21) {
+        if(event->button() == Qt::LeftButton) {
+            if(click == true) {
+                if(lastObj->c != NULL ) {
+                    lastObj->c->center.x = event->x() - (pos1X - markedObj->c->center.x);
+                    lastObj->c->center.y = (mouseH - event->y()) - (pos1Y - markedObj->c->center.y);
+                }else if(lastObj->rec != NULL) {
+
+                }
+            }
+        }
+        cp=false;
+        clearMouse();
+        clearMarkers();
+    }
+    updateGL();
 }
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -552,12 +592,30 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
             markedLine2->previousLine->v2.y = pos2Y;
         }
         else if(OPTION == 20){
-            if(click == true){
-                pos2X = event->x()/zoom;
-                pos2Y = (mouseH - event->y())/zoom;
-                panX = auxpanX + pos1X - pos2X;
-                panY = auxpanY + pos1Y - pos2Y;
+            pos2X = event->x()/zoom;
+            pos2Y = (mouseH - event->y())/zoom;
+            panX = auxpanX + pos1X - pos2X;
+            panY = auxpanY + pos1Y - pos2Y;
+
+        }else if(OPTION == 21) {
+            /* Operacao de copia. Inicia-se movendo o objeto. */
+            /* SEM TRATAR O ZOOM E O SPAN */
+            if(lastObj->c != NULL) {
+                lastObj->c->center.x = event->x() - (pos1X - markedObj->c->center.x);
+                lastObj->c->center.y = (mouseH - event->y()) - (pos1Y - markedObj->c->center.y);
+                //drawSelSquareMarker((lastObj->c->center.x - panX), (lastObj->c->center.y - panY), 5, 1);
+                //drawSelSquareMarker((lastObj->c->center.x - panX + lastObj->c->radius), (lastObj->c->center.y - panY), 5, 1);
+            }else if(lastObj->rec != NULL) {
+                lastObj->rec->v1.x = event->x() - (pos1X - markedObj->rec->v1.x);
+                lastObj->rec->v1.y = pos1Y;
+                lastObj->rec->v2.x = event->x() - (pos1X - markedObj->rec->v2.x);
+                lastObj->rec->v2.y = (mouseH - event->y()) - (pos2Y - markedObj->rec->v2.y);
+                lastObj->rec->v3.x = event->x() - (pos2X - markedObj->rec->v3.x);
+                lastObj->rec->v3.y = (mouseH - event->y()) - (pos2Y - markedObj->rec->v3.y);
+                lastObj->rec->v4.x = event->x() - (pos2X - markedObj->rec->v4.x);
+                lastObj->rec->v4.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v4.y);
             }
+
         }
         updateGL();
     }
@@ -682,6 +740,10 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
         updateGL();
         break;
     case Qt::Key_C:
+        printf("COPY\n");
+        OPTION = 9;
+        cp=true;
+        click=false;
         break;
     case Qt::Key_O:
         if(zoom >= 0.3) zoom -= 0.1;
