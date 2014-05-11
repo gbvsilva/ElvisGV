@@ -25,8 +25,8 @@ protected:
     void clearMarkers();
     void clearMouse();
     void delSelected();
-    void drawSquareMarker(int x, int y, int size);
-    void drawSelSquareMarker(int x, int y, int size, int color);
+    void drawSquareMarker(float x, float y, int size);
+    void drawSelSquareMarker(float x, float y, int size, int color);
     void createGroup();
     void undoGroup();
     void changeLayer();
