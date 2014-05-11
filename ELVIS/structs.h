@@ -72,6 +72,8 @@ struct obj{
     // Marcadores
     bool marked;// Seleção múltipla
     bool mainGroup;// Marcação do grupo principal
+    // Layer
+    int layer;
     obj(){
 	nextObj = NULL;
 	previousObj = NULL;
@@ -87,6 +89,7 @@ struct obj{
 	fillColor = NULL;
 	marked = false;
 	mainGroup = false;
+	layer = 0;
     }
 };
 #endif

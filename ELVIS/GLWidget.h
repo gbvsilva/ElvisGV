@@ -29,6 +29,11 @@ protected:
     void drawSelSquareMarker(int x, int y, int size);
     void createGroup();
     void undoGroup();
+    void changeLayer();
+    void objDebug();
+    void increaseLayer(int incValue);
+    void decreaseLayer(int decValue);
+    void updateLayer(int newLayer);
 };
 
 #endif // GLWIDGET_H
