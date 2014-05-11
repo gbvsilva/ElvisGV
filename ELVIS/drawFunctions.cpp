@@ -66,7 +66,7 @@ void bresenham( int x1, int y1, int x2, int y2 ) {
             dist *= -1;
             for(i = 0; i < dist; i++){
                 glBegin( GL_POINTS );
-                glVertex2i( p2.x-i, p1.y-i );
+                glVertex2i( p1.x-i, p1.y-i );
                 glEnd( );
             }
         }
@@ -85,7 +85,7 @@ void bresenham( int x1, int y1, int x2, int y2 ) {
             dist *= -1;
             for(i = 0; i < dist; i++){
                 glBegin( GL_POINTS );
-                glVertex2i( p2.x-i, p1.y+i );
+                glVertex2i( p1.x-i, p1.y+i );
                 glEnd( );
             }
         }
