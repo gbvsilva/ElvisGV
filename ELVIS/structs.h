@@ -54,19 +54,24 @@ struct color{
 };
 
 struct obj{
+    // Fazem com que a lista seja encadeada
     obj* nextObj;
     obj* previousObj;
+    // Definem o subtipo do objeto
     line* firstLine;
     line* lastLine;
     circle* c;
     elipse* elip;
     rectangle* rec;
+    // Cores do objeto
     color* fillColor;
     color* lineColor;
+    // Utilizados apenas se o objeto é um grupo
     obj* group;
     obj* endGroup;
-    bool marked;
-    bool mainGroup;
+    // Marcadores
+    bool marked;// Seleção múltipla
+    bool mainGroup;// Marcação do grupo principal
     obj(){
         nextObj = NULL;
         previousObj = NULL;
@@ -79,6 +84,7 @@ struct obj{
 	group = NULL;
 	endGroup = NULL;
 	lineColor = new color();
+	fillColor = NULL;
 	marked = false;
 	mainGroup = false;
     }
