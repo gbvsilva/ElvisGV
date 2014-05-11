@@ -345,7 +345,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
         }
     }
     /* Desenhar ELIPSE */
-    else if(OPTION == 3) {
+    else if(OPTION==3) {
         clearMarkers();
         if(event->button() == Qt::LeftButton) {
             if(click==false) {
@@ -377,7 +377,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
         }
     }
     // Retângulo
-    else if(OPTION == 4){
+    else if(OPTION==4){
         rectangle* rec;
         clearMarkers();
         if(click == false){
@@ -418,7 +418,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
         }
         updateGL();
     }
-    else if(OPTION == 7){
+    else if(OPTION==7){
         if(click == false){
             if(markedLine != NULL){
                 line* newLine = new line();
@@ -448,7 +448,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 
     }
     // Seleção de linha
-    else if(OPTION == 8){
+    else if(OPTION==8){
         bool foundLine;
         objPt = firstObj;
         float m;
@@ -527,45 +527,46 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             linePt = objPt->firstLine;
 
             // Seleção de polilinhas
-            if(linePt != NULL) while(linePt != NULL){
-                foundLine = true;
-                // Casos trivias
-                if(linePt->v1.x < pos1X - clipSize &&
-                        linePt->v2.x < pos1X - clipSize) foundLine = false;
-                else if(linePt->v1.y < pos1Y - clipSize &&
-                        linePt->v2.y < pos1Y - clipSize) foundLine = false;
-                else if(linePt->v1.x > pos1X + clipSize &&
-                        linePt->v2.x > pos1X + clipSize) foundLine = false;
-                else if(linePt->v1.y > pos1Y + clipSize &&
-                        linePt->v2.y > pos1Y + clipSize) foundLine = false;
-                // Casos não triviais
-                else{
-                    foundLine = false;
-                    if(linePt->v1.x > linePt->v2.x){
-                        x0 = linePt->v2.x;
-                        y0 = linePt->v2.y;
-                        x1 = linePt->v1.x;
-                        y1 = linePt->v1.y;
-                    }
+            if(linePt != NULL)
+                while(linePt != NULL){
+                    foundLine = true;
+                    // Casos triviais
+                    if(linePt->v1.x < pos1X - clipSize &&
+                            linePt->v2.x < pos1X - clipSize) foundLine = false;
+                    else if(linePt->v1.y < pos1Y - clipSize &&
+                            linePt->v2.y < pos1Y - clipSize) foundLine = false;
+                    else if(linePt->v1.x > pos1X + clipSize &&
+                            linePt->v2.x > pos1X + clipSize) foundLine = false;
+                    else if(linePt->v1.y > pos1Y + clipSize &&
+                            linePt->v2.y > pos1Y + clipSize) foundLine = false;
+                    // Casos não triviais
                     else{
-                        x0 = linePt->v1.x;
-                        y0 = linePt->v1.y;
-                        x1 = linePt->v2.x;
-                        y1 = linePt->v2.y;
+                        foundLine = false;
+                        if(linePt->v1.x > linePt->v2.x){
+                            x0 = linePt->v2.x;
+                            y0 = linePt->v2.y;
+                            x1 = linePt->v1.x;
+                            y1 = linePt->v1.y;
+                        }
+                        else{
+                            x0 = linePt->v1.x;
+                            y0 = linePt->v1.y;
+                            x1 = linePt->v2.x;
+                            y1 = linePt->v2.y;
+                        }
+                        m = (float)(y1-y0)/(float)(x1-x0);
+                        if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
+                                y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+                        else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
+                                y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+                        else if(x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
+                                x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+                        else if(x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
+                                x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
                     }
-                    m = (float)(y1-y0)/(float)(x1-x0);
-                    if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
-                            y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
-                    else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
-                            y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
-                    else if(x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
-                            x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
-                    else if(x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
-                            x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+                    if(foundLine == true) markedObj = objPt;
+                    linePt = linePt->nextLine;
                 }
-                if(foundLine == true) markedObj = objPt;
-                linePt = linePt->nextLine;
-            }
 
             // Seleção da circunferência
             else if(objPt->c != NULL){
@@ -656,16 +657,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     // Colocar desenho copiado
     else if(OPTION == 21) {
-        if(event->button() == Qt::LeftButton) {
-            if(click == true) {
-                if(lastObj->c != NULL ) {
-                    lastObj->c->center.x = event->x() - (pos1X - markedObj->c->center.x);
-                    lastObj->c->center.y = (mouseH - event->y()) - (pos1Y - markedObj->c->center.y);
-                }else if(lastObj->rec != NULL) {
-
-                }
-            }
-        }
+        /* Observei que nao precisava do codigo aqui. Basta apenas parar a COPIA.*/
         cp=false;
         clearMouse();
         clearMarkers();
@@ -724,6 +716,17 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
                 lastObj->rec->v3.y = lastObj->rec->v2.y;
                 lastObj->rec->v4.x = lastObj->rec->v3.x;
                 lastObj->rec->v4.y = lastObj->rec->v1.y;
+            }else if(lastObj->firstLine != NULL) {
+                line *pt1 = lastObj->firstLine;
+                line *pt2 = markedObj->firstLine;
+                while(pt1 != NULL) {
+                    pt1->v1.x = event->x() - (pos1X - pt2->v1.x);
+                    pt1->v1.y = (mouseH - event->y()) - (pos1Y - pt2->v1.y);
+                    pt1->v2.x = event->x() - (pos1X - pt2->v2.x);
+                    pt1->v2.y = (mouseH - event->y()) - (pos1Y - pt2->v2.y);
+                    pt1 = pt1->nextLine; pt2 = pt2->nextLine;
+                }
+
             }
 
         }

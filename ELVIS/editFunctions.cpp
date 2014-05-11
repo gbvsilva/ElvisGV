@@ -26,20 +26,26 @@ obj* copy(obj* form) {
         n->rec->v4.x = form->rec->v4.x;
         n->rec->v4.y = form->rec->v4.y;
     }else if(form->firstLine != NULL) {
+        n->firstLine = new line();
         line *pt1 = form->firstLine;
-        line *pt2 = n->firstLine, *aux;
+        line *pt2 = n->firstLine;
+        pt2->v1.x = pt1->v1.x;
+        pt2->v1.y = pt1->v1.y;
+        pt2->v2.x = pt1->v2.x;
+        pt2->v2.y = pt1->v2.y;
 
         while(pt1 != form->lastLine) {
-            pt2 = new line();
+            pt2->nextLine = new line();
+            pt2->nextLine->previousLine = pt2;
+            pt2 = pt2->nextLine;
+            pt1 = pt1->nextLine;
+
             pt2->v1.x = pt1->v1.x;
             pt2->v1.y = pt1->v1.y;
             pt2->v2.x = pt1->v2.x;
             pt2->v2.y = pt1->v2.y;
-            pt1 = pt1->nextLine;
-            aux = pt2;
-            pt2 = pt2->nextLine;
-            pt2->previousLine = aux;
         }
+        n->lastLine = pt2;
     }
     return n;
 }
