@@ -1,23 +1,21 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 // Vértice, linha, objeto, respectivamente
+struct obj;
+
 struct vertex{
     int x;
     int y;
 };
 
-struct obj;
-
 struct line{
     obj* top;
     line* nextLine;
     line* previousLine;
-    bool marked;
     vertex v1, v2;
     line(){
-        nextLine = NULL;
-        previousLine = NULL;
-	marked = false;
+	nextLine = NULL;
+	previousLine = NULL;
     }
 };
 
@@ -32,7 +30,7 @@ struct circle{
     int radius;
     vertex center;
     circle() {
-        radius=10.0;
+	radius=10.0;
     }
 };
 
@@ -40,7 +38,7 @@ struct elipse {
     int rx, ry;
     vertex center;
     elipse() {
-        rx=ry=0;
+	rx=ry=0;
     }
 };
 
@@ -49,34 +47,46 @@ struct color{
     float g;
     float b;
     color(){
-		r = 0;
-		g = 0;
-		b = 0;
+	r = 0;
+	g = 0;
+	b = 0;
     }
 };
 
 struct obj{
+    // Fazem com que a lista seja encadeada
     obj* nextObj;
     obj* previousObj;
+    // Definem o subtipo do objeto
     line* firstLine;
     line* lastLine;
     circle* c;
     elipse* elip;
     rectangle* rec;
+    // Cores do objeto
     color* fillColor;
     color* lineColor;
-    bool marked;
+    // Utilizados apenas se o objeto é um grupo
+    obj* group;
+    obj* endGroup;
+    // Marcadores
+    bool marked;// Seleção múltipla
+    bool mainGroup;// Marcação do grupo principal
     obj(){
-        nextObj = NULL;
-        previousObj = NULL;
-        firstLine = NULL;
-        lastLine = NULL;
-        c = NULL;
-        elip = NULL;
-		rec = NULL;
-		fillColor = NULL;
-		lineColor = new color();
-		marked = false;
+	nextObj = NULL;
+	previousObj = NULL;
+	firstLine = NULL;
+	lastLine = NULL;
+	c = NULL;
+	elip = NULL;
+	rec = NULL;
+	fillColor = NULL;
+	group = NULL;
+	endGroup = NULL;
+	lineColor = new color();
+	fillColor = NULL;
+	marked = false;
+	mainGroup = false;
     }
 };
 #endif
