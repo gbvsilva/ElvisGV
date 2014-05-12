@@ -1,15 +1,14 @@
+#include <iostream>
 #include <QtGui/QMouseEvent>
 #include <GL/glu.h>
-#include <iostream>
 #include <math.h>
 #include "GLWidget.h"
-#include "stdio.h"
 #include "structs.h"
 #include "drawFunctions.h"
 #include "editFunctions.h"
 
 // Opcao de COMANDO
-int OPTION = 1;
+int OPTION = 0;
 bool grid = false;
 // Posição anterior e atual que o mouse clicou, respectivamente
 int pos1X = 0;
@@ -50,7 +49,7 @@ void GLWidget::initializeGL() {
     glEnable(GL_BLEND);
     glEnable(GL_POLYGON_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(0.95, 0.95, 0.95, 1);
+    glClearColor(1, 1, 1, 1);
 }
 
 void GLWidget::resizeGL(int w, int h) {
@@ -270,13 +269,14 @@ void GLWidget::paintGL() {
             // Desenho de elipse
             else if(elipPt != NULL) {
                 glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-                //midPtElipse(elipPt->center.x, elipPt->center.y, elipPt->rx, elipPt->ry);
                 midPtElipse((elipPt->center.x - panX)*zoom, (elipPt->center.y - panY)*zoom, (elipPt->rx - panX)*zoom, (elipPt->ry - panY)*zoom);
-
-                /*if(markedObj != NULL && markedObj == objPt) {
+                if(markedObj != NULL && markedObj == objPt) {
                     drawSelSquareMarker((elipPt->center.x - panX)*zoom, (elipPt->center.y - panY)*zoom, 5, 0);
-                    drawSelSquareMarker((elipPt->center.x - panX + elipPt->radius)*zoom, (elipPt->center.y - panY)*zoom,  5, 0);
-                }*/
+                    drawSelSquareMarker((elipPt->center.x + elipPt->rx - panX)*zoom, (elipPt->center.y + elipPt->ry - panY), 5, 0);
+                }else {
+                    drawSquareMarker((elipPt->center.x - panX)*zoom, (elipPt->center.y - panY), 5);
+                    drawSquareMarker((elipPt->center.x + elipPt->rx - panX)*zoom, (elipPt->center.y + elipPt->ry - panY), 5);
+                }
             }
             objPt = objPt->nextObj;
         }
@@ -592,7 +592,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                 if(objPt->c->radius > posDist - clipSize &&
                         objPt->c->radius < posDist + clipSize) markedObj = objPt;
             }
+            // Seleção da elipse
+            else if(objPt->elip != NULL) {
 
+
+            }
             // Seleção de retângulo
             else if(objPt->rec != NULL){
                 foundLine = true;
@@ -637,11 +641,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                 if(foundLine == true) markedObj = objPt;
                 foundLine = false;
             }
-
-            // Seleção da elipse
-            // else if(){
-            // }
-
             // Seleção para o agrupamento
             if(markedObj == objPt && OPTION == 10){
                 markedObj = NULL;
@@ -1014,29 +1013,15 @@ void objDebug(){
         count++;
     }
 }
+
 void GLWidget::keyPressEvent(QKeyEvent* event) {
     switch(event->key()) {
     case Qt::Key_Escape:
         close();
         break;
-    case Qt::Key_1:
-        OPTION = 1;
-        clearMouse();
-        break;
-    case Qt::Key_2:
-        OPTION = 2;
-        clearMouse();
-        break;
-    case Qt::Key_3:
-        OPTION = 3;
-        clearMouse();
-        break;
+
     case Qt::Key_7:
         OPTION = 7;
-        clearMouse();
-        break;
-    case Qt::Key_4:
-        OPTION = 4;
         clearMouse();
         break;
     case Qt::Key_8:
@@ -1086,7 +1071,7 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
         break;
     case Qt::Key_C:
         printf("COPY\n");
-        OPTION = 9;
+
         cp=true;
         clearMouse();
         break;
@@ -1100,4 +1085,35 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
         event->ignore();
         break;
     }
+}
+
+void GLWidget::drawPolyline() {
+    OPTION=1;
+    clearMouse();
+}
+
+void GLWidget::drawCircle() {
+    OPTION=2;
+    clearMouse();
+}
+
+void GLWidget::drawEllipse() {
+    OPTION=3;
+    clearMouse();
+}
+
+void GLWidget::drawRectangle() {
+    OPTION=4;
+    clearMouse();
+}
+void GLWidget::editCopy() {
+    cp=true;
+    OPTION=9;
+    clearMouse();
+}
+
+void GLWidget::editTranslation() {
+    translation=true;
+    OPTION=9;
+    clearMouse();
 }

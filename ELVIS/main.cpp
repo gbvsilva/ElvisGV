@@ -1,12 +1,10 @@
-//#include "mainwindow.h"
+#include "MainWindow.h"
 #include <QApplication>
-#include "GLWidget.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    GLWidget w;
-    w.resize(800,600);
+    MainWindow w;
     w.show();
 
     return a.exec();

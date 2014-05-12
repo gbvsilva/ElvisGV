@@ -1,7 +1,7 @@
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
-#include <QtOpenGL/QGLWidget>
+#include <QGLWidget>
 
 class GLWidget : public QGLWidget
 {
@@ -9,11 +9,17 @@ class GLWidget : public QGLWidget
 public slots:
     void mouseClick();
     void mouseMovement();
+    void drawPolyline();
+    void drawCircle();
+    void drawRectangle();
+    void drawEllipse();
+    void editCopy();
+    void editTranslation();
 signals:
     void mouseClicked();
     void mouseMoved();
 public:
-    explicit GLWidget(QWidget *parent = NULL);
+    explicit GLWidget(QWidget *parent = 0);
 
 protected:
     void initializeGL();
@@ -30,5 +36,4 @@ protected:
     void createGroup();
     void undoGroup();
 };
-
 #endif // GLWIDGET_H

@@ -15,15 +15,18 @@ TEMPLATE = app
 SOURCES += main.cpp\
     GLWidget.cpp \
     drawFunctions.cpp \
-    editFunctions.cpp
+    editFunctions.cpp \
+    MainWindow.cpp
 
 HEADERS  += \
     GLWidget.h \
     structs.h \
     drawFunctions.h \
-    editFunctions.h
+    editFunctions.h \
+    MainWindow.h
 
-FORMS    += mainwindow.ui
+FORMS    += \
+    MainWindow.ui
 
 INCPATH = -I /usr/X11R6/include/ -I .
 LIBS = -lglut -lGLU -lGL -lm #-lGLEW
