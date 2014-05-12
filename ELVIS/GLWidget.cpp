@@ -32,7 +32,7 @@ float zoom = 1;
 // Clique inicial
 bool click = false;
 // Clique para copia
-bool cp = false;
+bool cp = false, translation=false;
 // Valor necessário para corrigir o mouse
 int mouseH = 0;
 // Ponteiro da cabeça da lista encadeada
@@ -43,6 +43,7 @@ obj* lastObj = NULL;
 line* markedLine = NULL;
 line* markedLine2 = NULL;
 obj* markedObj = NULL;
+obj* copiedObj = NULL;
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
@@ -93,8 +94,7 @@ void GLWidget::drawSelSquareMarker(float x, float y, int size, int color){
     bresenham(x + size, y - size, x + size, y + size );
     bresenham(x + size, y + size, x - size, y + size );
     bresenham(x - size, y + size, x - size, y - size );
-    if(color == 1)
-	glColor3f(0, 1, 0);
+    if(color == 1) glColor3f(0, 1, 0);
     else glColor3f(1, 0, 0);
     for(int i = -size + 1; i <= size - 1; i++){
 	bresenham(x - size + 1, y + i, x + size, y + i);
@@ -411,40 +411,35 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    click=false;
 	}
     }
-    // Desenho de elipse
-    else if(OPTION == 3) {
-	clearMarkers();
-	if(event->button() == Qt::LeftButton) {
-	    // Primeiro clique
-	    if(click==false) {
-		click=true;
-		pos1X = event->x()/zoom + panX;
-		pos1Y = (mouseH - event->y())/zoom + panY;
+    /* Desenhar ELIPSE */
+    else if(OPTION==3) {
+        clearMarkers();
+        if(event->button() == Qt::LeftButton) {
+            if(click==false) {
+                click=true;
+                pos1X = event->x()/zoom + panX;
+                pos1Y = (mouseH - event->y())/zoom + panY;
 
-		if(firstObj==NULL) {
-		    firstObj = new obj();
-		    lastObj=firstObj;
-		}
-		else {
-		    lastObj->nextObj = new obj();
-		    lastObj->nextObj->previousObj = lastObj;
-		    lastObj = lastObj->nextObj;
-		}
-
-		lastObj->elip = new elipse();
-		lastObj->elip->center.x=pos1X;
-		lastObj->elip->center.y=pos1Y;	
-	    }
-	    // Segundo clique
-	    else {
-		pos2X = event->x()/zoom + panX;
-		pos2Y = (mouseH - event->y())/zoom + panY;
-		lastObj->elip->rx = pos2X - pos1X;
-		lastObj->elip->ry = pos2Y - pos1Y;
-		updateGL();
-		click=false;
-	    }
-	}
+                if(firstObj==NULL) {
+                    firstObj = new obj();
+                    lastObj=firstObj;
+                }
+                else {
+                    lastObj->nextObj = new obj();
+                    lastObj->nextObj->previousObj = lastObj;
+                    lastObj = lastObj->nextObj;
+                }
+                lastObj->elip = new elipse();
+                lastObj->elip->center.x=pos1X;
+                lastObj->elip->center.y=pos1Y;
+            }else {
+                pos2X = event->x()/zoom + panX;
+                pos2Y = (mouseH - event->y())/zoom + panY;
+                lastObj->elip->rx = pos2X - pos1X;
+                lastObj->elip->ry = pos2Y - pos1Y;
+                click=false;
+            }
+        }
     }
     // Desenho de retângulo
     else if(OPTION == 4){
@@ -765,14 +760,30 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 	    objPt = objPt->nextObj;
 	}
-	// Seleção para cópia
-	if(markedObj != NULL && cp==true) {
-	    OPTION=21;
-	    click=true;
-	    lastObj->nextObj = copy(markedObj);
-	    lastObj->nextObj->previousObj = lastObj;
-	    lastObj = lastObj->nextObj;
-	}
+	if(markedObj != NULL) {
+            if(cp==true) {
+                OPTION=21;
+                click=true;
+                lastObj->nextObj = copy(markedObj);
+                copiedObj = lastObj->nextObj;
+                lastObj->nextObj->previousObj = lastObj;
+                lastObj = lastObj->nextObj;
+            }else if(translation==true) {
+                lastObj->nextObj = copy(markedObj);
+                copiedObj = lastObj->nextObj;
+                lastObj->nextObj->previousObj = lastObj;
+                lastObj = lastObj->nextObj;
+                if(markedObj != firstObj) {
+                    markedObj->previousObj->nextObj = markedObj->nextObj;
+                    markedObj->nextObj->previousObj = markedObj->previousObj;
+                }else {
+                    firstObj = markedObj->nextObj;
+                    markedObj->nextObj->previousObj = NULL;
+                }
+                OPTION=21;
+                click=true;
+            }
+        }
     }
     // Screen pan
     else if(OPTION == 20){
@@ -789,19 +800,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     }
     // Colocar desenho copiado
     else if(OPTION == 21) {
-	if(event->button() == Qt::LeftButton) {
-	    if(click == true) {
-		if(lastObj->c != NULL ) {
-		    lastObj->c->center.x = event->x() - (pos1X - markedObj->c->center.x);
-		    lastObj->c->center.y = (mouseH - event->y()) - (pos1Y - markedObj->c->center.y);
-		}else if(lastObj->rec != NULL) {
-
-		}
-	    }
-	}
-	cp=false;
-	clearMouse();
-	clearMarkers();
+        /* Observei que nao precisava do codigo aqui. Basta apenas parar a COPIA.*/
+        cp=false;
+        translation=false;
+        clearMouse();
+        clearMarkers();
     }
     updateGL();
 }
@@ -869,25 +872,32 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 	    panY = auxpanY + pos1Y - pos2Y;
 
 	}else if(OPTION == 21) {
-	    /* Operacao de copia. Inicia-se movendo o objeto. */
-	    /* SEM TRATAR O ZOOM E O SPAN */
-	    if(lastObj->c != NULL) {
-		lastObj->c->center.x = event->x() - (pos1X - markedObj->c->center.x);
-		lastObj->c->center.y = (mouseH - event->y()) - (pos1Y - markedObj->c->center.y);
-		//drawSelSquareMarker((lastObj->c->center.x - panX), (lastObj->c->center.y - panY), 5, 1);
-		//drawSelSquareMarker((lastObj->c->center.x - panX + lastObj->c->radius), (lastObj->c->center.y - panY), 5, 1);
-	    }else if(lastObj->rec != NULL) {
-		lastObj->rec->v1.x = event->x() - (pos1X - markedObj->rec->v1.x);
-		lastObj->rec->v1.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v1.y);
-		lastObj->rec->v2.x = lastObj->rec->v1.x;
-		lastObj->rec->v2.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v2.y);
-		lastObj->rec->v3.x = event->x() - (pos1X - markedObj->rec->v3.x);
-		lastObj->rec->v3.y = lastObj->rec->v2.y;
-		lastObj->rec->v4.x = lastObj->rec->v3.x;
-		lastObj->rec->v4.y = lastObj->rec->v1.y;
-	    }
-
-	}
+            /* Operacao de copia. Inicia-se movendo o objeto. */
+            /* SEM TRATAR O ZOOM E O SPAN */
+            if(lastObj->c != NULL) {
+                lastObj->c->center.x = event->x() - (pos1X - markedObj->c->center.x);
+                lastObj->c->center.y = (mouseH - event->y()) - (pos1Y - markedObj->c->center.y);
+            }else if(lastObj->rec != NULL) {
+                lastObj->rec->v1.x = event->x() - (pos1X - markedObj->rec->v1.x);
+                lastObj->rec->v1.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v1.y);
+                lastObj->rec->v2.x = lastObj->rec->v1.x;
+                lastObj->rec->v2.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v2.y);
+                lastObj->rec->v3.x = event->x() - (pos1X - markedObj->rec->v3.x);
+                lastObj->rec->v3.y = lastObj->rec->v2.y;
+                lastObj->rec->v4.x = lastObj->rec->v3.x;
+                lastObj->rec->v4.y = lastObj->rec->v1.y;
+            }else if(lastObj->firstLine != NULL) {
+                line *pt1 = lastObj->firstLine;
+                line *pt2 = markedObj->firstLine;
+                while(pt1 != NULL) {
+                    pt1->v1.x = event->x() - (pos1X - pt2->v1.x);
+                    pt1->v1.y = (mouseH - event->y()) - (pos1Y - pt2->v1.y);
+                    pt1->v2.x = event->x() - (pos1X - pt2->v2.x);
+                    pt1->v2.y = (mouseH - event->y()) - (pos1Y - pt2->v2.y);
+                    pt1 = pt1->nextLine; pt2 = pt2->nextLine;
+                }
+            }
+        }
 	updateGL();
     }
 }
@@ -1280,6 +1290,7 @@ void GLWidget::clearMarkers(){
     markedLine = NULL;
     markedLine2 = NULL;
     markedObj = NULL;
+    copiedObj = NULL;
 }
 
 /**
@@ -1712,7 +1723,13 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    printf("COPY\n");
 	    OPTION = 9;
 	    cp=true;
-	    click=false;
+	    clearMouse();
+	    break;
+	case Qt::Key_T:
+	    printf("Translation\n");
+	    OPTION=9;
+	    translation=true;
+	    clearMouse();
 	    break;
 	case Qt::Key_S:
 	    save();
