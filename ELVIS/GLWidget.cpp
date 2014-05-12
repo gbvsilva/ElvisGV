@@ -521,10 +521,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     // Seleção de vértice
     else if(OPTION == 6){
 	bool foundVertex;
-	float m;
-	int posDist;
-	int x0, y0, x1, y1;
-	int clipSize = 4;
+	int clipSize = 5;
 
 	clearMarkers();
 	objPt = firstObj;
@@ -538,37 +535,89 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    // Seleção de polilinhas
 	    if(linePt != NULL) while(linePt != NULL){
 		foundVertex = true;
-		if(linePt->v1.x < pos1X - clipSize &&
+		if(linePt->v1.x < pos1X - clipSize ||
 			linePt->v1.x > pos1Y + clipSize) foundVertex = false;
-		if(linePt->v1.y < pos1Y - clipSize &&
+		if(linePt->v1.y < pos1Y - clipSize ||
 			linePt->v1.y > pos1Y + clipSize) foundVertex = false;
 		if(foundVertex == true){
 		    markedObj = objPt;
 		    markedLine = linePt;
 		}
 		if(linePt->nextLine == NULL){
-		    if(linePt->v2.x < pos1X - clipSize &&
+		    foundVertex = true;
+		    if(linePt->v2.x < pos1X - clipSize ||
 			    linePt->v2.x > pos1X + clipSize) foundVertex = false;
-		    if(linePt->v2.y < pos1Y - clipSize &&
+		    if(linePt->v2.y < pos1Y - clipSize ||
 			    linePt->v2.y > pos1Y + clipSize) foundVertex = false;
 		    if(foundVertex == true){
 			markedObj = objPt;
 			markedLine = NULL;
 		    }
 		}
+		linePt = linePt->nextLine;
 	    }
-	    // Seleção da circunferência
+	    /*
+	     * Seleção por vértice para os outros objetos existe, mas não é utilizado
 	    else if(objPt->c != NULL){
-		if(objPt->c->center.x < pos1X - clipSize &&
+		foundVertex = true;
+		if(objPt->c->center.x < pos1X - clipSize ||
 			objPt->c->center.x > pos1X + clipSize) foundVertex = false;
-		if(objPt->c->center.y < pos1Y - clipSize &&
+		if(objPt->c->center.y < pos1Y - clipSize ||
 			objPt->c->center.y > pos1Y + clipSize) foundVertex = false;
-		if(objPt->c->center.x < pos1X - clipSize + objPt->c->radius &&
-			objPt->c->center.x > pos1X + clipSize + objPt->c->radius ) foundVertex = false;
-		if(objPt->c->center.y < pos1Y - clipSize + objPt->c->radius &&
-			objPt->c->center.y > pos1Y + clipSize + objPt->c->radius) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+
+		foundVertex = true;
+		if(objPt->c->center.x + objPt->c->radius < pos1X - clipSize ||
+			objPt->c->center.x + objPt->c->radius > pos1X + clipSize) foundVertex = false;
+		if(objPt->c->center.y < pos1Y - clipSize ||
+			objPt->c->center.y > pos1Y + clipSize) foundVertex = false;
 		if(foundVertex == true) markedObj = objPt;
 	    }
+	    else if(objPt->rec != NULL){
+		foundVertex = true;
+		if(objPt->rec->v1.x < pos1X - clipSize ||
+			objPt->rec->v1.x > pos1X + clipSize) foundVertex = false;
+		if(objPt->rec->v1.y < pos1Y - clipSize ||
+			objPt->rec->v1.y > pos1Y + clipSize) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+
+		foundVertex = true;
+		if(objPt->rec->v2.x < pos1X - clipSize ||
+			objPt->rec->v2.x > pos1X + clipSize) foundVertex = false;
+		if(objPt->rec->v2.y < pos1Y - clipSize ||
+			objPt->rec->v2.y > pos1Y + clipSize) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+
+		foundVertex = true;
+		if(objPt->rec->v3.x < pos1X - clipSize ||
+			objPt->rec->v3.x > pos1X + clipSize) foundVertex = false;
+		if(objPt->rec->v3.y < pos1Y - clipSize ||
+			objPt->rec->v3.y > pos1Y + clipSize) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+
+		foundVertex = true;
+		if(objPt->rec->v4.x < pos1X - clipSize ||
+			objPt->rec->v4.x > pos1X + clipSize) foundVertex = false;
+		if(objPt->rec->v4.y < pos1Y - clipSize ||
+			objPt->rec->v4.y > pos1Y + clipSize) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+	    }
+	    else if(objPt->elip != NULL){
+		foundVertex = true;
+		if(objPt->elip->center.x < pos1X - clipSize ||
+			objPt->elip->center.x > pos1X + clipSize) foundVertex = false;
+		if(objPt->elip->center.y < pos1Y - clipSize ||
+			objPt->elip->center.y > pos1Y + clipSize) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+
+		foundVertex = true;
+		if(objPt->elip->center.x - objPt->elip->rx < pos1X - clipSize ||
+			objPt->elip->center.x - objPt->elip->rx > pos1X + clipSize) foundVertex = false;
+		if(objPt->elip->center.y - objPt->elip->ry < pos1Y - clipSize ||
+			objPt->elip->center.y - objPt->elip->ry > pos1Y + clipSize) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+	    }
+	    */
 	    objPt = objPt->nextObj;
 	}
     }
