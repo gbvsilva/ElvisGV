@@ -14,8 +14,8 @@ struct line{
     line* previousLine;
     vertex v1, v2;
     line(){
-	nextLine = NULL;
-	previousLine = NULL;
+        nextLine = NULL;
+        previousLine = NULL;
     }
 };
 
@@ -30,7 +30,7 @@ struct circle{
     int radius;
     vertex center;
     circle() {
-	radius=10.0;
+        radius=10.0;
     }
 };
 
@@ -38,7 +38,7 @@ struct elipse {
     int rx, ry;
     vertex center;
     elipse() {
-	rx=ry=0;
+        rx=ry=0;
     }
 };
 
@@ -47,9 +47,9 @@ struct color{
     float g;
     float b;
     color(){
-	r = 0;
-	g = 0;
-	b = 0;
+        r = 0;
+        g = 0;
+        b = 0;
     }
 };
 

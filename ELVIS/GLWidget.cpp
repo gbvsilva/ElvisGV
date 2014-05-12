@@ -1,20 +1,19 @@
+#include <iostream>
 #include <QtGui/QMouseEvent>
 #include <GL/glu.h>
-#include <iostream>
 #include <math.h>
 #include <fstream>
 #include <stdlib.h>
 #include <string>
 #include <sstream>
 #include "GLWidget.h"
-#include "stdio.h"
 #include "structs.h"
 #include "drawFunctions.h"
 #include "editFunctions.h"
 using namespace std;
 
 // Opcao de COMANDO
-int OPTION = 1;
+int OPTION = 0;
 bool grid = false;
 // Posição anterior e atual que o mouse clicou, respectivamente
 int pos1X = 0;
@@ -59,7 +58,7 @@ void GLWidget::initializeGL() {
     glEnable(GL_BLEND);
     glEnable(GL_POLYGON_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(0.95, 0.95, 0.95, 1);
+    glClearColor(1, 1, 1, 1);
 }
 /**
  * Redimensionamentoda janela e o plano de desenho (canvas)
@@ -259,6 +258,12 @@ void GLWidget::paintGL() {
 		    }
 		}
 		// Caso esteja selecionado, marcação especial
+		if(copiedObj != NULL && copiedObj == objPt) {
+                    drawSelSquareMarker((recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom, 5, 1);
+                    drawSelSquareMarker((recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom, 5, 1);
+                    drawSelSquareMarker((recPt->v3.x - panX)*zoom, (recPt->v3.y - panY)*zoom, 5, 1);
+                    drawSelSquareMarker((recPt->v4.x - panX)*zoom, (recPt->v4.y - panY)*zoom, 5, 1);
+                }
 		if(markedObj != NULL && markedObj == objPt){
 		    drawSelSquareMarker((recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom, 5, 0);
 		    drawSelSquareMarker((recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom, 5, 0);
@@ -286,6 +291,12 @@ void GLWidget::paintGL() {
 		    drawSelSquareMarker((circPt->center.x - panX + circPt->radius)*zoom,
 			    (circPt->center.y - panY)*zoom,  5, 0);
 		}
+		else if(copiedObj != NULL && copiedObj == objPt) {
+		    drawSelSquareMarker((circPt->center.x - panX)*zoom,
+			    (circPt->center.y - panY)*zoom, 5, 1);
+		    drawSelSquareMarker((circPt->center.x - panX + circPt->radius)*zoom,
+			    (circPt->center.y - panY)*zoom,  5, 1);
+		}
 		// Caso contrário
 		else if(groupObj == NULL){
 		    drawSquareMarker((circPt->center.x - panX)*zoom,
@@ -301,6 +312,18 @@ void GLWidget::paintGL() {
 			(elipPt->center.y - panY)*zoom,
 			(elipPt->rx - panX)*zoom,
 			(elipPt->ry - panY)*zoom);
+		if(markedObj != NULL && markedObj == objPt) {
+		    drawSelSquareMarker((elipPt->center.x - panX)*zoom,
+			    (elipPt->center.y - panY)*zoom, 5, 0);
+		    drawSelSquareMarker((elipPt->center.x + elipPt->rx - panX)*zoom,
+			    (elipPt->center.y + elipPt->ry - panY), 5, 0);
+		}
+		else {
+		    drawSquareMarker((elipPt->center.x - panX)*zoom,
+			    (elipPt->center.y - panY), 5);
+		    drawSquareMarker((elipPt->center.x + elipPt->rx - panX)*zoom,
+			    (elipPt->center.y + elipPt->ry - panY), 5);
+		}
 	    }
 	    objPt = objPt->nextObj;
 	}
@@ -1787,4 +1810,36 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    event->ignore();
 	    break;
     }
+}
+
+void GLWidget::drawPolyline() {
+    OPTION=1;
+    clearMouse();
+}
+
+void GLWidget::drawCircle() {
+    OPTION=2;
+    clearMouse();
+}
+
+void GLWidget::drawEllipse() {
+    OPTION=3;
+    clearMouse();
+}
+
+void GLWidget::drawRectangle() {
+    OPTION=4;
+    clearMouse();
+}
+
+void GLWidget::editCopy() {
+    cp=true;
+    OPTION=9;
+    clearMouse();
+}
+
+void GLWidget::editTranslation() {
+    translation=true;
+    OPTION=9;
+    clearMouse();
 }
