@@ -2,11 +2,16 @@
 #include <GL/glu.h>
 #include <iostream>
 #include <math.h>
+#include <fstream>
+#include <stdlib.h>
+#include <string>
+#include <sstream>
 #include "GLWidget.h"
 #include "stdio.h"
 #include "structs.h"
 #include "drawFunctions.h"
 #include "editFunctions.h"
+using namespace std;
 
 // Opcao de COMANDO
 int OPTION = 1;
@@ -16,10 +21,12 @@ int pos1X = 0;
 int pos1Y = 0;
 int pos2X = 0;
 int pos2Y = 0;
+// Valores do screen pan
 int panX = 0;
 int panY = 0;
 int auxpanX = 0;
 int auxpanY = 0;
+// Tamanho do viewport, utilizado para corrigir a posição do mouse
 int screenH, screenW;
 float zoom = 1;
 // Clique inicial
@@ -41,7 +48,9 @@ GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
     setMouseTracking(true);
 }
-
+/**
+ * Inicialização do openGL. Função utilizada apenas pelo Qt.
+ */
 void GLWidget::initializeGL() {
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_DEPTH_TEST);
@@ -51,7 +60,9 @@ void GLWidget::initializeGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0.95, 0.95, 0.95, 1);
 }
-
+/**
+ * Redimensionamentoda janela e o plano de desenho (canvas)
+ */
 void GLWidget::resizeGL(int w, int h) {
     mouseH = h;
     glViewport(0, 0, w, h);
@@ -63,7 +74,9 @@ void GLWidget::resizeGL(int w, int h) {
     screenH = h;
     screenW = w;
 }
-
+/**
+ * Desenho do marcador de ponto de controle
+ */
 void GLWidget::drawSquareMarker(float x, float y, int size){
     glColor3f(1, 0, 0);
     bresenham(x - size, y - size, x + size, y - size );
@@ -71,7 +84,9 @@ void GLWidget::drawSquareMarker(float x, float y, int size){
     bresenham(x + size, y + size, x - size, y + size );
     bresenham(x - size, y + size, x - size, y - size );
 }
-
+/**
+ * Desenho do marcador de ponto de controle, caso o objeto tenha sido selecionado
+ */
 void GLWidget::drawSelSquareMarker(float x, float y, int size, int color){
     glColor3f(0, 0, 0);
     bresenham(x - size, y - size, x + size, y - size );
@@ -85,8 +100,16 @@ void GLWidget::drawSelSquareMarker(float x, float y, int size, int color){
 	bresenham(x - size + 1, y + i, x + size, y + i);
     }
 }
-
+/**
+ * Função de pintura/desenho na tela. Ela é chamada na abertura do programa, quando a janela é
+ * alterada (resizeGL()), ou quando é chamada manualmente (updateGL()).
+ *
+ * Nessa função, é desenhada a grade de desenho (caso esta tenha sido ativada), e todos os objetos
+ * pertencentes à lista duplamente encadeada. Ele também trata de abrir os agrupamentos, caso
+ * necessário.
+ */
 void GLWidget::paintGL() {
+    // Auxiliares
     obj* objPt;
     obj* groupObj;
     line* linePt;
@@ -94,16 +117,18 @@ void GLWidget::paintGL() {
     elipse* elipPt;
     rectangle* recPt;
     vertex v1, v2;
-    int gridSize; // Tamanho da grade
+    // Tamanho da grade
+    int gridSize;
 
     gridSize = 40;
-    objPt = firstObj;
     groupObj = NULL;
+    objPt = firstObj;
 
+    // Limpeza da tela
     glLoadIdentity();
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //Desenho da grade
+    // Desenho da grade
     if(grid){
 	glColor3f(0.9, 0.9, 0.9);
 	for(int i = gridSize/2; i <= screenW/zoom; i+= gridSize)
@@ -117,13 +142,13 @@ void GLWidget::paintGL() {
 	for(int i = 0; i <= screenH/zoom; i+= gridSize)
 	    bresenham(0, (i - panY % gridSize)*zoom, screenW, (i - panY % gridSize)*zoom);
     }
-    // Desenho dos objetos
+    // Desenho de todos os objetos
     while(objPt != NULL){
 	linePt = objPt->firstLine;
 	circPt = objPt->c;
 	elipPt = objPt->elip;
 	recPt = objPt->rec;
-	// Caso o objeto seja um grupo
+	// Retirada dos objetos de um agrupamento
 	if(objPt->group != NULL){
 	    // Primeira passagem, desenhar todos os objetos do conjunto
 	    if(objPt->mainGroup == false){
@@ -136,7 +161,7 @@ void GLWidget::paintGL() {
 		if(groupObj == objPt){
 		    groupObj = NULL;
 		    objPt->mainGroup = false;
-
+		    // Caso tenha sido selecionado
 		    if((markedObj != NULL && markedObj == objPt) ||
 			    (markedLine != NULL && markedLine == linePt) ||
 			    (markedLine != NULL && markedLine == linePt->previousLine) ||
@@ -165,10 +190,10 @@ void GLWidget::paintGL() {
 		}
 	    }
 	}
-	// Caso contrário
+	// Demais objetos
 	else{
 	    if(objPt->marked == true) markedObj = objPt;
-	    // Desenhando polilinhas
+	    // Polilinhas
 	    if(linePt != NULL) {
 		linePt = objPt->firstLine;
 		while(linePt != NULL) {
@@ -251,27 +276,40 @@ void GLWidget::paintGL() {
 	    // Desenho de circunferência
 	    else if(circPt != NULL) {
 		glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-		midPtCircle((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, (circPt->radius)*zoom);
+		midPtCircle((circPt->center.x - panX)*zoom,
+			(circPt->center.y - panY)*zoom,
+			(circPt->radius)*zoom);
+		// Caso tenha sido selecionado
 		if(markedObj != NULL && markedObj == objPt){
-		    drawSelSquareMarker((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, 5, 0);
-		    drawSelSquareMarker((circPt->center.x - panX + circPt->radius)*zoom, (circPt->center.y - panY)*zoom,  5, 0);
+		    drawSelSquareMarker((circPt->center.x - panX)*zoom,
+			    (circPt->center.y - panY)*zoom, 5, 0);
+		    drawSelSquareMarker((circPt->center.x - panX + circPt->radius)*zoom,
+			    (circPt->center.y - panY)*zoom,  5, 0);
 		}
 		// Caso contrário
 		else if(groupObj == NULL){
-		    drawSquareMarker((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, 5);
-		    drawSquareMarker((circPt->center.x - panX + circPt->radius)*zoom, (circPt->center.y - panY)*zoom,  5);
+		    drawSquareMarker((circPt->center.x - panX)*zoom,
+			    (circPt->center.y - panY)*zoom, 5);
+		    drawSquareMarker((circPt->center.x - panX + circPt->radius)*zoom,
+			    (circPt->center.y - panY)*zoom,  5);
 		}
 	    }
 	    // Desenho de elipse
 	    else if(elipPt != NULL) {
 		glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
-		midPtElipse((elipPt->center.x - panX)*zoom, (elipPt->center.y - panY)*zoom, (elipPt->rx - panX)*zoom, (elipPt->ry - panY)*zoom);
+		midPtElipse((elipPt->center.x - panX)*zoom,
+			(elipPt->center.y - panY)*zoom,
+			(elipPt->rx - panX)*zoom,
+			(elipPt->ry - panY)*zoom);
 	    }
 	    objPt = objPt->nextObj;
 	}
     }
 }
 
+/**
+ * Função que captura o clique do mouse
+ */
 void GLWidget::mousePressEvent(QMouseEvent *event) {
     mouseClick();
     obj* objPt;
@@ -280,6 +318,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     if(OPTION == 1) {
 	clearMarkers();
 	if(event->button() == Qt::LeftButton) {
+	    // Primeiro clique do desenho
 	    if(click == false) {
 		pos1X = event->x()/zoom + panX;
 		pos1Y = (mouseH - event->y())/zoom + panY;
@@ -296,6 +335,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		    lastObj = lastObj->nextObj;
 		}
 	    }
+	    // Cliques restantes
 	    else {
 		pos1X = pos2X;
 		pos1Y = pos2Y;
@@ -312,18 +352,34 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		lastObj->lastLine = lastObj->lastLine->nextLine;
 	    }
 	    lastObj->lastLine->top = lastObj;
-
+	    // Captura das posições
 	    lastObj->lastLine->v1.x = pos1X;
 	    lastObj->lastLine->v1.y = pos1Y;
 	    lastObj->lastLine->v2.x = pos2X;
 	    lastObj->lastLine->v2.y = pos2Y;
-	    updateGL();
 	}
-	else if(event->button() == Qt::MiddleButton) click = false;
+	else if(event->button() == Qt::MiddleButton){
+	    click = false;
+	    markedObj = lastObj;
+	    decreaseLayer(0);
+	    clearMarkers();
+	}
+	else if(event->button() == Qt::RightButton){
+	    click = false;
+	    objPt = lastObj;
+	    lastObj = lastObj->previousObj;
+	    if(lastObj != NULL){
+		lastObj->nextObj = NULL;
+	    }
+	    else firstObj = NULL;
+	    delete objPt;
+	}
+	updateGL();
     }
-    /* Desenhar CIRCULO */
+    // Desenho de circunferência
     else if(OPTION==2) {
 	clearMarkers();
+	// Primeiro clique
 	if(click == false) {
 	    click = true;
 	    pos1X = event->x()/zoom + panX;
@@ -342,19 +398,24 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    lastObj->c->center.x = pos1X;
 	    lastObj->c->center.y = pos1Y;
 	}
+	// Segundo clique
 	else {
 	    pos2X = event->x()/zoom + panX;
 	    pos2Y = (mouseH - event->y())/zoom + panY;
 	    lastObj->c->radius = sqrt(pow((pos2X - pos1X), 2) + pow((pos2Y - pos1Y), 2));
 
+	    markedObj = lastObj;
+	    decreaseLayer(0);
+	    clearMarkers();
 	    updateGL();
 	    click=false;
 	}
     }
-    /* Desenhar ELIPSE */
+    // Desenho de elipse
     else if(OPTION == 3) {
 	clearMarkers();
 	if(event->button() == Qt::LeftButton) {
+	    // Primeiro clique
 	    if(click==false) {
 		click=true;
 		pos1X = event->x()/zoom + panX;
@@ -372,8 +433,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 
 		lastObj->elip = new elipse();
 		lastObj->elip->center.x=pos1X;
-		lastObj->elip->center.y=pos1Y;
-	    }else {
+		lastObj->elip->center.y=pos1Y;	
+	    }
+	    // Segundo clique
+	    else {
 		pos2X = event->x()/zoom + panX;
 		pos2Y = (mouseH - event->y())/zoom + panY;
 		lastObj->elip->rx = pos2X - pos1X;
@@ -383,10 +446,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 	}
     }
-    // Retângulo
+    // Desenho de retângulo
     else if(OPTION == 4){
 	rectangle* rec;
 	clearMarkers();
+	// Primeiro clique
 	if(click == false){
 	    pos1X = event->x()/zoom + panX;
 	    pos1Y = (mouseH - event->y())/zoom + panY;
@@ -413,6 +477,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    rec->v4.y = pos1Y;
 	    click = true;
 	}
+	// Segundo clique
 	else{
 	    rec = lastObj->rec;
 	    pos2X = event->x()/zoom + panX;
@@ -423,8 +488,12 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    rec->v4.x = pos2X;
 	    click = false;
 	}
+	markedObj = lastObj;
+	decreaseLayer(0);
+	clearMarkers();
 	updateGL();
     }
+    // Criação de um novo vértice em uma polilinha
     else if(OPTION == 7){
 	if(click == false){
 	    if(markedLine != NULL){
@@ -454,7 +523,81 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	clearMarkers();
 
     }
-    // Seleção de linha
+    // Seleção de vértice
+    else if(OPTION == 12){
+	bool foundVertex;
+	float m;
+	int posDist;
+	int x0, y0, x1, y1;
+	int clipSize = 4;
+
+	clearMarkers();
+	objPt = firstObj;
+
+	pos1X = event->x()/zoom + panX;
+	pos1Y = (mouseH - event->y())/zoom + panY;
+
+	while(objPt != NULL){
+	    linePt = objPt->firstLine;
+
+	    // Seleção de polilinhas
+	    if(linePt != NULL) while(linePt != NULL){
+		foundVertex = true;
+		if(linePt->v1.x < pos1X - clipSize &&
+			linePt->v1.x > pos1Y + clipSize) foundVertex = false;
+		if(linePt->v1.y < pos1Y - clipSize &&
+			linePt->v1.y > pos1Y + clipSize) foundVertex = false;
+		if(foundVertex == true){
+		    markedObj = objPt;
+		    markedLine = linePt;
+		}
+		if(linePt->nextLine == NULL){
+		    if(linePt->v2.x < pos1X - clipSize &&
+			    linePt->v2.x > pos1X + clipSize) foundVertex = false;
+		    if(linePt->v2.y < pos1Y - clipSize &&
+			    linePt->v2.y > pos1Y + clipSize) foundVertex = false;
+		    if(foundVertex == true){
+			markedObj = objPt;
+			markedLine = NULL;
+		    }
+		}
+	    }
+	    // Seleção da circunferência
+	    else if(objPt->c != NULL){
+		if(objPt->c->center.x < pos1X - clipSize &&
+			objPt->c->center.x > pos1X + clipSize) foundVertex = false;
+		if(objPt->c->center.y < pos1Y - clipSize &&
+			objPt->c->center.y > pos1Y + clipSize) foundVertex = false;
+		if(objPt->c->center.x < pos1X - clipSize + objPt->c->radius &&
+			objPt->c->center.x > pos1X + clipSize + objPt->c->radius ) foundVertex = false;
+		if(objPt->c->center.y < pos1Y - clipSize + objPt->c->radius &&
+			objPt->c->center.y > pos1Y + clipSize + objPt->c->radius) foundVertex = false;
+		if(foundVertex == true) markedObj = objPt;
+	    }
+	    // Seleção de retângulo
+	    // else if(objPt->rec != NULL){
+	    // }
+	    // Seleção da elipse
+	    // else if(){
+	    // }
+	    // Seleção para o agrupamento
+	    if(markedObj == objPt && OPTION == 10){
+		markedObj = NULL;
+		if(objPt->marked == false) objPt->marked = true;
+		else objPt->marked = false;
+	    }
+	    objPt = objPt->nextObj;
+	}
+	if(markedObj != NULL && cp==true) {
+	    OPTION=21;
+	    click=true;
+	    lastObj->nextObj = copy(markedObj);
+	    lastObj->nextObj->previousObj = lastObj;
+	    lastObj = lastObj->nextObj;
+	}
+    }
+
+    // Seleção de uma linha da polilinha
     else if(OPTION == 8){
 	bool foundLine;
 	objPt = firstObj;
@@ -516,7 +659,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	}
 	updateGL();
     }
-    // Seleção de objeto
+    /*
+     * Seleção de objetos. Caso a opção 9 tenha sido selecionada, apenas um objeto será selecionado.
+     * Caso seja a opção 10, vários objetos serão selecionados para o agrupamento.
+     */
     else if(OPTION == 9 || OPTION == 10){
 	bool foundLine;
 	float m;
@@ -529,10 +675,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 
 	pos1X = event->x()/zoom + panX;
 	pos1Y = (mouseH - event->y())/zoom + panY;
-
+	// Leitura de todos os objetos
 	while(objPt != NULL){
 	    linePt = objPt->firstLine;
-
 	    // Seleção de polilinhas
 	    if(linePt != NULL) while(linePt != NULL){
 		foundLine = true;
@@ -582,7 +727,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			objPt->c->radius < posDist + clipSize) markedObj = objPt;
 	    }
 
-	    // Seleção de retângulo
+	    // Seleção de retângulo. Cada lado é checado
 	    else if(objPt->rec != NULL){
 		foundLine = true;
 		if(objPt->rec->v1.x < pos1X - clipSize &&
@@ -632,7 +777,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    // else if(){
 	    // }
 
-	    // Seleção para o agrupamento
+	    // Caso a seleção seja para o agrupamento
 	    if(markedObj == objPt && OPTION == 10){
 		markedObj = NULL;
 		if(objPt->marked == false) objPt->marked = true;
@@ -640,6 +785,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    }
 	    objPt = objPt->nextObj;
 	}
+	// Seleção para cópia
 	if(markedObj != NULL && cp==true) {
 	    OPTION=21;
 	    click=true;
@@ -680,34 +826,44 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     updateGL();
 }
 
+/*
+ *  Captura de movimento do mouse
+ */
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     mouseMovement();
     pos2X = event->x()/zoom + panX;
     pos2Y = (mouseH - event->y())/zoom + panY;
+    // Caso um clique tenha sido feito anteriormente
     if(click == true) {
+	// Desenho da polilinha em tempo real
 	if(OPTION == 1) {
 	    lastObj->lastLine->v2.x = pos2X;
 	    lastObj->lastLine->v2.y = pos2Y;
 	}
+	// Desenho da circunferência em tempo real
 	else if(OPTION == 2) {
 	    lastObj->c->radius = sqrt(pow((pos2X - pos1X), 2) + pow((pos2Y - pos1Y), 2));
 	}
+	// Desenho da elipse em tempo real
 	else if(OPTION == 3) {
 	    lastObj->elip->rx = pos2X - pos1X;
 	    lastObj->elip->ry = pos2Y - pos1Y;
 	}
+	// Desenho do retângulo em tempo real
 	else if(OPTION == 4){
 	    lastObj->rec->v2.y = pos2Y;
 	    lastObj->rec->v3.x = pos2X;
 	    lastObj->rec->v3.y = pos2Y;
 	    lastObj->rec->v4.x = pos2X;
 	}
+	// Adição de um novo vértice
 	else if(OPTION == 7){
 	    markedLine2->v1.x = pos2X;
 	    markedLine2->v1.y = pos2Y;
 	    markedLine2->previousLine->v2.x = pos2X;
 	    markedLine2->previousLine->v2.y = pos2Y;
 	}
+	// Screen pan
 	else if(OPTION == 20){
 	    pos2X = event->x()/zoom;
 	    pos2Y = (mouseH - event->y())/zoom;
@@ -738,6 +894,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 
+// Limpa as informações relativas ao mouse
 void GLWidget::clearMouse(){
     click = false;
     pos1X = 0;
@@ -746,13 +903,392 @@ void GLWidget::clearMouse(){
     pos2Y = 0;
 }
 
+// Salva todos os objetos em um arquivo
+void GLWidget::save(){
+    ofstream save;
+    obj* objPt;
+    obj* groupObj;
+    line* linePt;
+    circle* circPt;
+    elipse* elipPt;
+    rectangle* recPt;
+
+    save.open("save.elv");
+    save << "BEGINSAVE ";
+    std::ostringstream ss;
+    objPt = firstObj;
+
+    while(objPt != NULL){
+	ss << "\nBEGINOBJ ";
+	ss << objPt->layer;
+	ss << " ";
+	if(objPt->fillColor == NULL){
+	    ss << "-1 -1 -1 ";
+	}
+	else{
+	    ss << objPt->fillColor->r;
+	    ss << " ";
+	    ss << objPt->fillColor->g;
+	    ss << " ";
+	    ss << objPt->fillColor->b;
+	    ss << " ";
+	}
+	ss << objPt->lineColor->r;
+	ss << " ";
+	ss << objPt->lineColor->g;
+	ss << " ";
+	ss << objPt->lineColor->b;
+	ss << " ";
+	linePt = objPt->firstLine;
+	circPt = objPt->c;
+	recPt = objPt->rec;
+	elipPt = objPt->elip;
+
+	if(objPt->group != NULL){
+	    if(objPt->marked == false){
+		ss << "GROUP < ";
+		objPt->marked = true;    
+	    }
+	    else{
+		ss << "GROUP > ";
+		objPt->marked = false;
+	    }
+	}
+	else{
+	    if(linePt != NULL){
+		while(linePt != NULL){
+		    ss << "LINE ";
+		    ss << linePt->v1.x;
+		    ss << " "; 
+		    ss << linePt->v1.y;
+		    ss << " ";
+		    ss << linePt->v2.x;
+		    ss << " "; 
+		    ss << linePt->v2.y;
+		    ss << " ";
+		    linePt = linePt->nextLine;
+		}
+	    }
+	    else if(recPt != NULL){
+		ss << "REC ";
+		ss << recPt->v1.x;
+		ss << " "; 
+		ss << recPt->v1.y;
+		ss << " "; 
+		ss << recPt->v2.x;
+		ss << " "; 
+		ss << recPt->v2.y;
+		ss << " "; 
+		ss << recPt->v3.x;
+		ss << " ";
+		ss << recPt->v3.y;
+		ss << " "; 
+		ss << recPt->v4.x;
+		ss << " ";
+		ss << recPt->v4.y;
+		ss << " ";
+	    }
+	    else if(circPt != NULL){
+		ss << "CIRC ";
+		ss << circPt->center.x; 
+		ss << " ";
+		ss << circPt->center.y; 
+		ss << " ";
+		ss << circPt->radius; 
+		ss << " ";
+	    }
+	    else if(elipPt != NULL){
+		ss << "ELIP ";
+		ss << elipPt->center.x; 
+		ss << " ";
+		ss << elipPt->center.y; 
+		ss << " ";
+		ss << elipPt->rx; 
+		ss << " ";
+		ss << elipPt->ry; 
+		ss << " ";
+	    }
+	}
+	if(objPt->group != NULL && objPt->marked == true) objPt = objPt->group;
+	else objPt = objPt->nextObj;
+	ss << "ENDOBJ ";
+    }
+    std::string s(ss.str());
+    save << s;
+    save << "\nENDSAVE ";
+    save.close();
+}
+
+void GLWidget::saveSVG(){
+    ofstream save;
+    obj* objPt;
+    obj* groupObj;
+    line* linePt;
+    circle* circPt;
+    elipse* elipPt;
+    rectangle* recPt;
+
+    save.open("save.svg");
+    save << "<!DOCTYPE html>\n";
+    save << "<html>\n";
+    save << "<body>\n";
+    save << "<svg height=\"" << screenH << "\" width=\"" << screenW << "\">\n";
+    std::ostringstream ss;
+    objPt = firstObj;
+
+    while(objPt != NULL){
+	linePt = objPt->firstLine;
+	circPt = objPt->c;
+	recPt = objPt->rec;
+	elipPt = objPt->elip;
+
+	if(objPt->group != NULL){
+	    if(objPt->marked == false) objPt->marked = true;    
+	    else objPt->marked = false;
+	}
+	else{
+	    if(linePt != NULL){
+		while(linePt != NULL){
+		    if(linePt == objPt->firstLine) ss << "<polyline points=\"";
+		    ss << linePt->v1.x;
+		    ss << ","; 
+		    ss << screenH - linePt->v1.y;
+		    ss << " ";
+		    if(linePt->nextLine == NULL){
+			ss << linePt->v2.x;
+			ss << ","; 
+			ss << screenH - linePt->v2.y;
+			ss << " ";
+		    }
+		    linePt = linePt->nextLine;
+		}
+		ss << "\" style=\"fill:none;stroke:rgb(";
+		ss << (int)(objPt->lineColor->r * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->g * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->b * 255); 
+		ss << ")\"/>\n";
+	    }
+	    else if(recPt != NULL){
+		ss << "<rect x=\"";
+		if(recPt->v1.x < recPt->v3.x) ss << recPt->v1.x;
+		else ss << recPt->v3.x;
+		ss << "\" y=\"";
+		if(recPt->v1.y < recPt->v3.y) ss << screenH - recPt->v1.y;
+		else ss << screenH - recPt->v3.y;
+		ss << "\" width=\"";
+		if(recPt->v1.x < recPt->v3.x) ss << recPt->v3.x - recPt->v1.x;
+		else ss << recPt->v3.x - recPt->v1.x;
+		ss << "\" height=\"";
+		if(recPt->v1.y < recPt->v3.y) ss << recPt->v3.y - recPt->v1.y;
+		else ss << recPt->v1.y - recPt->v3.y;
+		ss << "\" style=\"fill:rgb(";
+		if(objPt->fillColor == NULL) ss << "black";
+		else{
+		    ss << (int)(objPt->fillColor->r * 255); 
+		    ss << ",";
+		    ss << (int)(objPt->fillColor->g * 255); 
+		    ss << ",";
+		    ss << (int)(objPt->fillColor->b * 255); 
+		}
+		ss << ");stroke:rgb(";
+		ss << (int)(objPt->lineColor->r * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->g * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->b * 255); 
+		ss << ");fill-opacity:";
+		if(objPt->fillColor == NULL) ss << "0";
+		else ss << "1";
+		ss << "\"/>\n";
+	    }
+	    else if(circPt != NULL){
+		ss << "<circle cx=\"";
+		ss << circPt->center.x;
+		ss << "\" cy=\"";
+		ss << screenH - circPt->center.y;
+		ss << "\" r=\"";
+		ss << circPt->radius;
+		ss << "\" style=\"fill:rgb(";
+		if(objPt->fillColor == NULL) ss << "black";
+		else{
+		    ss << (int)(objPt->fillColor->r * 255); 
+		    ss << ",";
+		    ss << (int)(objPt->fillColor->g * 255); 
+		    ss << ",";
+		    ss << (int)(objPt->fillColor->b * 255); 
+		}
+		ss << ");stroke:rgb(";
+		ss << (int)(objPt->lineColor->r * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->g * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->b * 255); 
+		ss << ");fill-opacity:";
+		if(objPt->fillColor == NULL) ss << "0";
+		else ss << "1";
+		ss << "\"/>\n";
+
+	    }
+	    else if(elipPt != NULL){
+		ss << "<ellipse cx=\"";
+		ss << elipPt->center.x;
+		ss << "\" cy=\"";
+		ss << screenH - elipPt->center.y;
+		ss << "\" rx=\"";
+		ss << elipPt->rx;
+		ss << "\" ry=\"";
+		ss << elipPt->ry;
+		ss << "\" style=\"fill:rgb(";
+		if(objPt->fillColor == NULL) ss << "black";
+		else{
+		    ss << (int)(objPt->fillColor->r * 255); 
+		    ss << ",";
+		    ss << (int)(objPt->fillColor->g * 255); 
+		    ss << ",";
+		    ss << (int)(objPt->fillColor->b * 255); 
+		}
+		ss << ");stroke:rgb(";
+		ss << (int)(objPt->lineColor->r * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->g * 255); 
+		ss << ",";
+		ss << (int)(objPt->lineColor->b * 255); 
+		ss << ");fill-opacity:";
+		if(objPt->fillColor == NULL) ss << "0";
+		else ss << "1";
+		ss << "\"/>\n";
+	    }
+	}
+	if(objPt->group != NULL && objPt->marked == true) objPt = objPt->group;
+	else objPt = objPt->nextObj;
+    }
+    std::string s(ss.str());
+    save << s;
+    save << "</svg>\n";
+    save << "</body>\n";
+    save << "</html>\n";
+    save.close();
+}
+
+// Carrega todos os objetos de um arquivo
+void GLWidget::load(){
+    ifstream load;
+    obj* objPt;
+    obj* groupObj;
+    line* linePt;
+    circle* circPt;
+    elipse* elipPt;
+    rectangle* recPt;
+    string s;
+    float aux;
+    
+    load.open("save.elv");
+    objPt = firstObj;
+    delete objPt;
+    objPt = lastObj;
+    delete objPt;
+    firstObj = NULL;
+    lastObj = NULL;
+
+    load >> s;
+    if(s.compare("BEGINSAVE") == 0 && firstObj == NULL){
+	load >> s;
+	while(s.compare("BEGINOBJ") == 0){
+	    if(firstObj == NULL){
+		objPt = new obj();
+		firstObj = objPt;
+		lastObj = objPt;
+	    }
+	    else{
+		objPt->nextObj = new obj();
+		objPt->nextObj->previousObj = objPt;
+		objPt = objPt->nextObj;
+		lastObj = objPt;
+	    }
+
+	    load >> objPt->layer;
+	    load >> aux;
+	    if(aux != -1){
+		objPt->fillColor = new color();
+		objPt->fillColor->r = aux;
+		load >> objPt->fillColor->g;
+		load >> objPt->fillColor->b;
+	    }
+	    else load >> s >> s;
+	    load >> objPt->lineColor->r;
+	    load >> objPt->lineColor->g;
+	    load >> objPt->lineColor->b;
+	    load >> s;
+	    while(s.compare("ENDOBJ") != 0){
+		if(s.compare("LINE") == 0){
+		    if(objPt->firstLine == NULL){
+			objPt->firstLine = new line();
+			objPt->lastLine = objPt->firstLine;
+		    }
+		    else{
+			objPt->lastLine->nextLine = new line();
+			objPt->lastLine = objPt->lastLine->nextLine;
+		    }
+		    linePt = objPt->lastLine;
+		    load >> linePt->v1.x;
+		    load >> linePt->v1.y;
+		    load >> linePt->v2.x;
+		    load >> linePt->v2.y;
+
+		}
+		else if(s.compare("REC") == 0){
+		    objPt->rec = new rectangle();
+		    recPt = objPt->rec;
+		    load >> recPt->v1.x;
+		    load >> recPt->v1.y;
+		    load >> recPt->v2.x;
+		    load >> recPt->v2.y;
+		    load >> recPt->v3.x;
+		    load >> recPt->v3.y;
+		    load >> recPt->v4.x;
+		    load >> recPt->v4.y;
+		}
+		else if(s.compare("CIRC") == 0){
+		    objPt->c = new circle();
+		    circPt = objPt->c;
+		    load >> circPt->center.x;
+		    load >> circPt->center.y;
+		    load >> circPt->radius;
+		}
+		else if(s.compare("ELIP") == 0){
+		    objPt->elip = new elipse();
+		    elipPt = objPt->elip;
+		    load >> elipPt->center.x;
+		    load >> elipPt->center.y;
+		    load >> elipPt->rx;
+		    load >> elipPt->ry;
+		}
+		load >> s;
+	    }
+	    load >> s;
+	    cout << s << "\n";
+	}
+	printf("\nEND OF LOADING\n");
+	updateGL();
+    }
+}
+
+/**
+ * Limpa todos os marcadores
+ */
 void GLWidget::clearMarkers(){
     markedLine = NULL;
     markedLine2 = NULL;
     markedObj = NULL;
 }
 
+/**
+ * Deleta o objeto ou linha selecionada
+ */
 void GLWidget::delSelected(){
+    line* linePt;
     // Remoção de linha
     if(markedLine != NULL){
 	if(markedLine->previousLine == NULL && markedLine->nextLine == NULL){
@@ -782,6 +1318,15 @@ void GLWidget::delSelected(){
     }
     // Remoção de objeto
     else if(markedObj != NULL){
+	if(markedObj->firstLine != NULL){
+	    linePt = markedObj->lastLine;
+	    while(linePt != markedObj->firstLine){
+		linePt = linePt->previousLine;
+		delete linePt->nextLine;
+	    }
+	    delete linePt;
+	}
+
 	if(markedObj->previousObj == NULL && markedObj->nextObj == NULL){
 	    firstObj = NULL;
 	    lastObj = NULL;
@@ -798,12 +1343,15 @@ void GLWidget::delSelected(){
 	    markedObj->previousObj->nextObj = markedObj->nextObj;
 	    markedObj->nextObj->previousObj = markedObj->previousObj;
 	}
-	delete markedLine;
+	delete markedObj;
 	markedObj = NULL;
     }
     clearMarkers();
 }
 
+/**
+ * Cria um novo agrupamento
+ */
 void GLWidget::createGroup(){
     bool newGroup;
     obj* objPt;
@@ -852,8 +1400,8 @@ void GLWidget::createGroup(){
     if(newGroup == true){
 	lastObj->rec->v1.x = screenW;
 	lastObj->rec->v1.y = screenH;
-	lastObj->rec->v3.x = 0;
-	lastObj->rec->v3.y = 0;
+	lastObj->rec->v3.x = 40;
+	lastObj->rec->v3.y = 40;
 	objPt = lastObj->group;
 	while(objPt != lastObj){
 	    // Tamanho das polilinhas
@@ -920,13 +1468,13 @@ void GLWidget::createGroup(){
 	lastObj->rec->v4.y = lastObj->rec->v1.y;
     }
     clearMarkers();
-    markedObj = lastObj;
-    updateLayer(0);
 }
 
+/**
+ * Desfaz um agrupamento
+ */
 void GLWidget::undoGroup(){
     obj* objPt;
-
     if(markedObj != NULL){
 	if(markedObj->group != NULL){
 	    markedObj->group->previousObj = markedObj->previousObj;
@@ -935,13 +1483,15 @@ void GLWidget::undoGroup(){
 	    markedObj->endGroup->nextObj = markedObj->nextObj;
 	    if(markedObj != lastObj) markedObj->nextObj->previousObj = markedObj->endGroup;
 	    else lastObj = markedObj->endGroup;
+
+
+	    objPt = markedObj->endGroup;
+	    markedObj = markedObj->group;
+	    while(markedObj != objPt){
+		//decreaseLayer(0);
+		markedObj = markedObj->nextObj;
+	    }
 	}
-    }
-    objPt = markedObj;
-    markedObj = objPt->group;
-    while(markedObj != objPt->endGroup){
-	updateLayer(0);
-	markedObj = markedObj->nextObj;
     }
     clearMarkers();
 }
@@ -954,6 +1504,9 @@ void GLWidget::mouseMovement(){
     emit mouseMoved();
 }
 
+/**
+ * Função de debug, mostra todos os objetos em uma lista no terminal
+ */
 void GLWidget::objDebug(){
     obj* objPt;
     int count;
@@ -1000,70 +1553,75 @@ void GLWidget::objDebug(){
     }
 }
 
+/**
+ * Transfere o objeto para uma camada superior
+ */
 void GLWidget::increaseLayer(int incValue){
     obj* objPt;
+    if(markedObj != NULL){
 
-    markedObj->layer += incValue;
-    objPt = markedObj->nextObj;
-    while(objPt != NULL && (objPt->layer <= markedObj->layer))
-	objPt = objPt->nextObj;
-    if(objPt != markedObj->nextObj){
-	if(markedObj == firstObj) firstObj = markedObj->nextObj;		
-	else markedObj->previousObj->nextObj = markedObj->nextObj;
-	markedObj->nextObj->previousObj = markedObj->previousObj;
-	if(objPt == NULL){
-	    markedObj->previousObj = lastObj;
-	    markedObj->previousObj->nextObj = markedObj;
-	    markedObj->nextObj = NULL;
-	    lastObj = markedObj;
-	}
-	else{
-	    markedObj->previousObj = objPt->previousObj;
-	    markedObj->nextObj = objPt;
-	    markedObj->nextObj->previousObj = markedObj;
-	    markedObj->previousObj->nextObj = markedObj;
+	markedObj->layer += incValue;
+	objPt = markedObj->nextObj;
+	while(objPt != NULL && (objPt->layer <= markedObj->layer))
+	    objPt = objPt->nextObj;
+	if(objPt != markedObj->nextObj){
+	    if(markedObj == firstObj) firstObj = markedObj->nextObj;		
+	    else markedObj->previousObj->nextObj = markedObj->nextObj;
+	    markedObj->nextObj->previousObj = markedObj->previousObj;
+	    if(objPt == NULL){
+		markedObj->previousObj = lastObj;
+		markedObj->previousObj->nextObj = markedObj;
+		markedObj->nextObj = NULL;
+		lastObj = markedObj;
+	    }
+	    else{
+		markedObj->previousObj = objPt->previousObj;
+		markedObj->nextObj = objPt;
+		markedObj->nextObj->previousObj = markedObj;
+		markedObj->previousObj->nextObj = markedObj;
+	    }
 	}
     }
     clearMarkers();
 }
 
+/**
+ * Transfere o objeto para uma camada inferior 
+ */
 void GLWidget::decreaseLayer(int decValue){
     obj* objPt;
 
-    markedObj->layer -= decValue;
-    if(markedObj->layer < 0) markedObj->layer = 0;
-    objPt = markedObj->previousObj;
-    while(objPt != NULL && (objPt->layer > markedObj->layer))
-	objPt = objPt->previousObj;
-    if(objPt != markedObj->previousObj){
-	if(markedObj == lastObj) lastObj = markedObj->previousObj;		
-	else markedObj->nextObj->previousObj = markedObj->previousObj;
-	markedObj->previousObj->nextObj = markedObj->nextObj;
-	objDebug();
-	if(objPt == NULL){
-	    printf("X\n");
-	    markedObj->nextObj = lastObj;
-	    markedObj->nextObj->previousObj = markedObj;
-	    markedObj->previousObj = NULL;
-	    firstObj = markedObj;
-	}
-	else{
-	    markedObj->nextObj = objPt->nextObj;
-	    markedObj->previousObj = objPt;
-	    markedObj->previousObj->nextObj = markedObj;
-	    markedObj->nextObj->previousObj = markedObj;
+    if(markedObj != NULL){
+	markedObj->layer -= decValue;
+	if(markedObj->layer < 0) markedObj->layer = 0;
+	objPt = markedObj->previousObj;
+	while(objPt != NULL && (objPt->layer > markedObj->layer))
+	    objPt = objPt->previousObj;
+	if(objPt != markedObj->previousObj){
+	    if(markedObj == lastObj) lastObj = markedObj->previousObj;		
+	    else markedObj->nextObj->previousObj = markedObj->previousObj;
+	    markedObj->previousObj->nextObj = markedObj->nextObj;
+	    objDebug();
+	    if(objPt == NULL){
+		markedObj->nextObj = lastObj;
+		markedObj->nextObj->previousObj = markedObj;
+		markedObj->previousObj = NULL;
+		firstObj = markedObj;
+	    }
+	    else{
+		markedObj->nextObj = objPt->nextObj;
+		markedObj->previousObj = objPt;
+		markedObj->previousObj->nextObj = markedObj;
+		markedObj->nextObj->previousObj = markedObj;
+	    }
 	}
     }
     clearMarkers();
 }
 
-void GLWidget::updateLayer(int newLayer){
-    if(markedObj != NULL){
-	if(newLayer - markedObj->layer > 0) increaseLayer(newLayer - markedObj->layer);
-	else decreaseLayer(newLayer - markedObj->layer);
-    }
-}
-
+/**
+ * Função de captura de botões pressionados
+ */
 void GLWidget::keyPressEvent(QKeyEvent* event) {
     switch(event->key()) {
 	case Qt::Key_Escape:
@@ -1134,6 +1692,9 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	case Qt::Key_D:
 	    objDebug();
 	    break;
+	case Qt::Key_L:
+	    load();
+	    break;
 	case Qt::Key_Q:
 	    decreaseLayer(1);
 	    updateGL();
@@ -1142,11 +1703,18 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    increaseLayer(1);
 	    updateGL();
 	    break;
+	case Qt::Key_V:
+	    saveSVG();
+	    updateGL();
+	    break;
 	case Qt::Key_C:
 	    printf("COPY\n");
 	    OPTION = 9;
 	    cp=true;
 	    click=false;
+	    break;
+	case Qt::Key_S:
+	    save();
 	    break;
 	default:
 	    event->ignore();

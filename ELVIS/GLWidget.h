@@ -33,7 +33,9 @@ protected:
     void objDebug();
     void increaseLayer(int incValue);
     void decreaseLayer(int decValue);
-    void updateLayer(int newLayer);
+    void save();
+    void load();
+    void saveSVG();
 };
 
 #endif // GLWIDGET_H

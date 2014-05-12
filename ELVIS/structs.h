@@ -58,6 +58,7 @@ struct obj{
     obj* nextObj;
     obj* previousObj;
     // Definem o subtipo do objeto
+    vertex v;
     line* firstLine;
     line* lastLine;
     circle* c;

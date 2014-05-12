@@ -47,10 +47,12 @@ OBJECTS_DIR   = ./
 
 SOURCES       = main.cpp \
 		GLWidget.cpp \
-		drawFunctions.cpp moc_GLWidget.cpp
+		drawFunctions.cpp \
+		editFunctions.cpp moc_GLWidget.cpp
 OBJECTS       = main.o \
 		GLWidget.o \
 		drawFunctions.o \
+		editFunctions.o \
 		moc_GLWidget.o
 DIST          = ../../Qt/5.2.1/gcc_64/mkspecs/features/spec_pre.prf \
 		../../Qt/5.2.1/gcc_64/mkspecs/common/shell-unix.conf \
@@ -411,7 +413,7 @@ qmake_all: FORCE
 
 dist: 
 	@test -d .tmp/ELVIS1.0.0 || mkdir -p .tmp/ELVIS1.0.0
-	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents GLWidget.h structs.h drawFunctions.h .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents main.cpp GLWidget.cpp drawFunctions.cpp .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents mainwindow.ui .tmp/ELVIS1.0.0/ && (cd `dirname .tmp/ELVIS1.0.0` && $(TAR) ELVIS1.0.0.tar ELVIS1.0.0 && $(COMPRESS) ELVIS1.0.0.tar) && $(MOVE) `dirname .tmp/ELVIS1.0.0`/ELVIS1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/ELVIS1.0.0
+	$(COPY_FILE) --parents $(SOURCES) $(DIST) .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents GLWidget.h structs.h drawFunctions.h editFunctions.h .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents main.cpp GLWidget.cpp drawFunctions.cpp editFunctions.cpp .tmp/ELVIS1.0.0/ && $(COPY_FILE) --parents mainwindow.ui .tmp/ELVIS1.0.0/ && (cd `dirname .tmp/ELVIS1.0.0` && $(TAR) ELVIS1.0.0.tar ELVIS1.0.0 && $(COMPRESS) ELVIS1.0.0.tar) && $(MOVE) `dirname .tmp/ELVIS1.0.0`/ELVIS1.0.0.tar.gz . && $(DEL_FILE) -r .tmp/ELVIS1.0.0
 
 
 clean:compiler_clean 
@@ -834,12 +836,17 @@ GLWidget.o: GLWidget.cpp ../../Qt/5.2.1/gcc_64/include/QtGui/QMouseEvent \
 		../../Qt/5.2.1/gcc_64/include/QtGui/QSurfaceFormat \
 		../../Qt/5.2.1/gcc_64/include/QtGui/qsurfaceformat.h \
 		structs.h \
-		drawFunctions.h
+		drawFunctions.h \
+		editFunctions.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o GLWidget.o GLWidget.cpp
 
 drawFunctions.o: drawFunctions.cpp structs.h \
 		drawFunctions.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o drawFunctions.o drawFunctions.cpp
+
+editFunctions.o: editFunctions.cpp structs.h \
+		editFunctions.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o editFunctions.o editFunctions.cpp
 
 moc_GLWidget.o: moc_GLWidget.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_GLWidget.o moc_GLWidget.cpp
