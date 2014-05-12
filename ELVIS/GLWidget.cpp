@@ -524,7 +524,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 
     }
     // Seleção de vértice
-    else if(OPTION == 12){
+    else if(OPTION == 6){
 	bool foundVertex;
 	float m;
 	int posDist;
@@ -574,29 +574,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 			objPt->c->center.y > pos1Y + clipSize + objPt->c->radius) foundVertex = false;
 		if(foundVertex == true) markedObj = objPt;
 	    }
-	    // Seleção de retângulo
-	    // else if(objPt->rec != NULL){
-	    // }
-	    // Seleção da elipse
-	    // else if(){
-	    // }
-	    // Seleção para o agrupamento
-	    if(markedObj == objPt && OPTION == 10){
-		markedObj = NULL;
-		if(objPt->marked == false) objPt->marked = true;
-		else objPt->marked = false;
-	    }
 	    objPt = objPt->nextObj;
 	}
-	if(markedObj != NULL && cp==true) {
-	    OPTION=21;
-	    click=true;
-	    lastObj->nextObj = copy(markedObj);
-	    lastObj->nextObj->previousObj = lastObj;
-	    lastObj = lastObj->nextObj;
-	}
     }
-
     // Seleção de uma linha da polilinha
     else if(OPTION == 8){
 	bool foundLine;
@@ -855,6 +835,24 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
 	    lastObj->rec->v3.x = pos2X;
 	    lastObj->rec->v3.y = pos2Y;
 	    lastObj->rec->v4.x = pos2X;
+	}
+	else if(OPTION == 6){
+	    if(markedObj != NULL){
+		if(markedObj->firstLine != NULL){
+		    if(markedLine != NULL){
+			    markedLine->v1.x = pos2X;
+			    markedLine->v1.y = pos2Y;
+			    if(markedLine->previousLine != NULL){
+				markedLine->previousLine->v2.x = pos2X;
+				markedLine->previousLine->v2.y = pos2Y;
+			    }
+		    }
+		    else{
+			markedObj->lastLine->v2.x = pos2X;
+			markedObj->lastLine->v2.y = pos2Y;
+		    }
+		}
+	    }
 	}
 	// Adição de um novo vértice
 	else if(OPTION == 7){
@@ -1691,6 +1689,9 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
 	case Qt::Key_D:
 	    objDebug();
+	    break;
+	case Qt::Key_6:
+	    OPTION = 6;
 	    break;
 	case Qt::Key_L:
 	    load();
