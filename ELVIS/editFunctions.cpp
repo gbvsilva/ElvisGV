@@ -2,6 +2,9 @@
 #include "structs.h"
 #include "editFunctions.h"
 
+/**
+ * Função de cópia
+ */
 obj* copy(obj* form) {
     obj* n = new obj();
 

@@ -13,6 +13,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+/**
+ * Janela principal
+ */
 void MainWindow::changeEvent(QEvent *e)
 {
     QWidget::changeEvent(e);

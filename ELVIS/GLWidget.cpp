@@ -12,8 +12,9 @@
 #include "editFunctions.h"
 using namespace std;
 
-// Opcao de COMANDO
+// Opcao de comando
 int OPTION = 0;
+// Opção de grade
 bool grid = false;
 // Posição anterior e atual que o mouse clicou, respectivamente
 int pos1X = 0;
@@ -38,7 +39,7 @@ int mouseH = 0;
 obj* firstObj = NULL;
 // Ponteiro da cauda da lista encadeada
 obj* lastObj = NULL;
-
+// Ponteiros auxiliares globais
 line* markedLine = NULL;
 line* markedLine2 = NULL;
 obj* markedObj = NULL;
@@ -85,7 +86,8 @@ void GLWidget::drawSquareMarker(float x, float y, int size){
     bresenham(x - size, y + size, x - size, y - size );
 }
 /**
- * Desenho do marcador de ponto de controle, caso o objeto tenha sido selecionado
+ * Desenho do marcador de ponto de controle especial,
+ * Para seleções normais (color = 0) ou cópias (color = 1)
  */
 void GLWidget::drawSelSquareMarker(float x, float y, int size, int color){
     glColor3f(0, 0, 0);
@@ -106,6 +108,8 @@ void GLWidget::drawSelSquareMarker(float x, float y, int size, int color){
  * Nessa função, é desenhada a grade de desenho (caso esta tenha sido ativada), e todos os objetos
  * pertencentes à lista duplamente encadeada. Ele também trata de abrir os agrupamentos, caso
  * necessário.
+ *
+ * O preenchimento com scanline está implementado para o retângulo, mas não é utilizado.
  */
 void GLWidget::paintGL() {
     // Auxiliares
@@ -141,13 +145,17 @@ void GLWidget::paintGL() {
 	for(int i = 0; i <= screenH/zoom; i+= gridSize)
 	    bresenham(0, (i - panY % gridSize)*zoom, screenW, (i - panY % gridSize)*zoom);
     }
-    // Desenho de todos os objetos
+    /**
+     * Desenho de todos os objetos
+     */
     while(objPt != NULL){
 	linePt = objPt->firstLine;
 	circPt = objPt->c;
 	elipPt = objPt->elip;
 	recPt = objPt->rec;
-	// Retirada dos objetos de um agrupamento
+	/**
+	 * Retirada dos objetos de um agrupamento
+	 */
 	if(objPt->group != NULL){
 	    // Primeira passagem, desenhar todos os objetos do conjunto
 	    if(objPt->mainGroup == false){
@@ -331,13 +339,15 @@ void GLWidget::paintGL() {
 }
 
 /**
- * Função que captura o clique do mouse
+ * Função que captura o clique do mouse, e executa várias das funcionalidades
  */
 void GLWidget::mousePressEvent(QMouseEvent *event) {
     mouseClick();
     obj* objPt;
     line* linePt;
-    // Criação de polilinha
+    /**
+     * Criação de polilinha. Botão do meio para o desenho, botão da direita cancela.
+     */
     if(OPTION == 1) {
 	clearMarkers();
 	if(event->button() == Qt::LeftButton) {
@@ -399,7 +409,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	}
 	updateGL();
     }
-    // Desenho de circunferência
+    /**
+     * Desenho de circunferência. Sem preenchimento.
+     */
     else if(OPTION==2) {
 	clearMarkers();
 	// Primeiro clique
@@ -434,7 +446,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    click=false;
 	}
     }
-    /* Desenhar ELIPSE */
+    /**
+     * Desenho da elipse. Sem preenchimento
+     */
     else if(OPTION==3) {
         clearMarkers();
         if(event->button() == Qt::LeftButton) {
@@ -464,7 +478,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             }
         }
     }
-    // Desenho de retângulo
+    /**
+     * Desenho de retângulo
+     */
     else if(OPTION == 4){
 	rectangle* rec;
 	clearMarkers();
@@ -511,7 +527,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	clearMarkers();
 	updateGL();
     }
-    // Criação de um novo vértice em uma polilinha
+    /**
+     * Criação de um novo vértice em uma polilinha. É necessário que esta linha tenha
+     * sido selecionada anteriormente
+     */
     else if(OPTION == 7){
 	if(click == false){
 	    if(markedLine != NULL){
@@ -541,7 +560,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	clearMarkers();
 
     }
-    // Seleção de vértice
+    /**
+     * Seleção de vértices
+     */
     else if(OPTION == 6){
 	bool foundVertex;
 	int clipSize = 5;
@@ -580,7 +601,9 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		linePt = linePt->nextLine;
 	    }
 	    /*
-	     * Seleção por vértice para os outros objetos existe, mas não é utilizado
+	     * Seleção por vértice para os outros objetos existe, mas não é utilizada
+	     */
+	    /*
 	    else if(objPt->c != NULL){
 		foundVertex = true;
 		if(objPt->c->center.x < pos1X - clipSize ||
@@ -644,7 +667,11 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    objPt = objPt->nextObj;
 	}
     }
-    // Seleção de uma linha da polilinha
+    /**
+     * Seleção de uma linha da polilinha.
+     *
+     * Essa funcionalidade serve apenas para adicionar um vértice a uma polilinha
+     */
     else if(OPTION == 8){
 	bool foundLine;
 	objPt = firstObj;
@@ -711,7 +738,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
      * Caso seja a opção 10, vários objetos serão selecionados para o agrupamento.
      */
     else if(OPTION == 9 || OPTION == 10){
-	bool foundLine;
+	bool foundObj;
 	float m;
 	int posDist;
 	int x0, y0, x1, y1;
@@ -727,19 +754,19 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    linePt = objPt->firstLine;
 	    // Seleção de polilinhas
 	    if(linePt != NULL) while(linePt != NULL){
-		foundLine = true;
+		foundObj = true;
 		// Casos trivias
 		if(linePt->v1.x < pos1X - clipSize &&
-			linePt->v2.x < pos1X - clipSize) foundLine = false;
+			linePt->v2.x < pos1X - clipSize) foundObj = false;
 		else if(linePt->v1.y < pos1Y - clipSize &&
-			linePt->v2.y < pos1Y - clipSize) foundLine = false;
+			linePt->v2.y < pos1Y - clipSize) foundObj = false;
 		else if(linePt->v1.x > pos1X + clipSize &&
-			linePt->v2.x > pos1X + clipSize) foundLine = false;
+			linePt->v2.x > pos1X + clipSize) foundObj = false;
 		else if(linePt->v1.y > pos1Y + clipSize &&
-			linePt->v2.y > pos1Y + clipSize) foundLine = false;
+			linePt->v2.y > pos1Y + clipSize) foundObj = false;
 		// Casos não triviais
 		else{
-		    foundLine = false;
+		    foundObj = false;
 		    if(linePt->v1.x > linePt->v2.x){
 			x0 = linePt->v2.x;
 			y0 = linePt->v2.y;
@@ -754,15 +781,15 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		    }
 		    m = (float)(y1-y0)/(float)(x1-x0);
 		    if(y0 + m*(pos1X - clipSize - x0) > pos1Y - clipSize &&
-			    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundLine  = true;
+			    y0 + m*(pos1X - clipSize - x0) < pos1Y + clipSize) foundObj  = true;
 		    else if(y0 + m*(pos1X + clipSize - x0) > pos1Y - clipSize &&
-			    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundLine = true;
+			    y0 + m*(pos1X + clipSize - x0) < pos1Y + clipSize) foundObj = true;
 		    else if(x0 + 1.0/m*(pos1Y - clipSize - y0) > pos1X - clipSize &&
-			    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundLine = true;
+			    x0 + 1.0/m*(pos1Y - clipSize - y0) < pos1X + clipSize) foundObj = true;
 		    else if(x0 + 1.0/m*(pos1Y + clipSize - y0) > pos1X - clipSize &&
-			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundLine = true;
+			    x0 + 1.0/m*(pos1Y + clipSize - y0) < pos1X + clipSize) foundObj = true;
 		}
-		if(foundLine == true) markedObj = objPt;
+		if(foundObj == true) markedObj = objPt;
 		linePt = linePt->nextLine;
 	    }
 
@@ -776,55 +803,63 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 
 	    // Seleção de retângulo. Cada lado é checado
 	    else if(objPt->rec != NULL){
-		foundLine = true;
+		foundObj = true;
 		if(objPt->rec->v1.x < pos1X - clipSize &&
-			objPt->rec->v2.x < pos1X - clipSize) foundLine = false;
+			objPt->rec->v2.x < pos1X - clipSize) foundObj = false;
 		else if(objPt->rec->v1.y < pos1Y - clipSize &&
-			objPt->rec->v2.y < pos1Y - clipSize) foundLine = false;
+			objPt->rec->v2.y < pos1Y - clipSize) foundObj = false;
 		else if(objPt->rec->v1.x > pos1X + clipSize &&
-			objPt->rec->v2.x > pos1X + clipSize) foundLine = false;
+			objPt->rec->v2.x > pos1X + clipSize) foundObj = false;
 		else if(objPt->rec->v1.y > pos1Y + clipSize &&
-			objPt->rec->v2.y > pos1Y + clipSize) foundLine = false;
-		if(foundLine == true) markedObj = objPt;
-		foundLine = true;
+			objPt->rec->v2.y > pos1Y + clipSize) foundObj = false;
+		if(foundObj == true) markedObj = objPt;
+		foundObj = true;
 		if(objPt->rec->v2.x < pos1X - clipSize &&
-			objPt->rec->v3.x < pos1X - clipSize) foundLine = false;
+			objPt->rec->v3.x < pos1X - clipSize) foundObj = false;
 		else if(objPt->rec->v2.y < pos1Y - clipSize &&
-			objPt->rec->v3.y < pos1Y - clipSize) foundLine = false;
+			objPt->rec->v3.y < pos1Y - clipSize) foundObj = false;
 		else if(objPt->rec->v2.x > pos1X + clipSize &&
-			objPt->rec->v3.x > pos1X + clipSize) foundLine = false;
+			objPt->rec->v3.x > pos1X + clipSize) foundObj = false;
 		else if(objPt->rec->v2.y > pos1Y + clipSize &&
-			objPt->rec->v3.y > pos1Y + clipSize) foundLine = false;
-		if(foundLine == true) markedObj = objPt;
-		foundLine = true;
+			objPt->rec->v3.y > pos1Y + clipSize) foundObj = false;
+		if(foundObj == true) markedObj = objPt;
+		foundObj = true;
 		if(objPt->rec->v3.x < pos1X - clipSize &&
-			objPt->rec->v4.x < pos1X - clipSize) foundLine = false;
+			objPt->rec->v4.x < pos1X - clipSize) foundObj = false;
 		else if(objPt->rec->v3.y < pos1Y - clipSize &&
-			objPt->rec->v4.y < pos1Y - clipSize) foundLine = false;
+			objPt->rec->v4.y < pos1Y - clipSize) foundObj = false;
 		else if(objPt->rec->v3.x > pos1X + clipSize &&
-			objPt->rec->v4.x > pos1X + clipSize) foundLine = false;
+			objPt->rec->v4.x > pos1X + clipSize) foundObj = false;
 		else if(objPt->rec->v3.y > pos1Y + clipSize &&
-			objPt->rec->v4.y > pos1Y + clipSize) foundLine = false;
-		if(foundLine == true) markedObj = objPt;
-		foundLine = true;
+			objPt->rec->v4.y > pos1Y + clipSize) foundObj = false;
+		if(foundObj == true) markedObj = objPt;
+		foundObj = true;
 		if(objPt->rec->v4.x < pos1X - clipSize &&
-			objPt->rec->v1.x < pos1X - clipSize) foundLine = false;
+			objPt->rec->v1.x < pos1X - clipSize) foundObj = false;
 		else if(objPt->rec->v4.y < pos1Y - clipSize &&
-			objPt->rec->v1.y < pos1Y - clipSize) foundLine = false;
+			objPt->rec->v1.y < pos1Y - clipSize) foundObj = false;
 		else if(objPt->rec->v4.x > pos1X + clipSize &&
-			objPt->rec->v1.x > pos1X + clipSize) foundLine = false;
+			objPt->rec->v1.x > pos1X + clipSize) foundObj = false;
 		else if(objPt->rec->v4.y > pos1Y + clipSize &&
-			objPt->rec->v1.y > pos1Y + clipSize) foundLine = false;
-		if(foundLine == true) markedObj = objPt;
-		foundLine = false;
-
+			objPt->rec->v1.y > pos1Y + clipSize) foundObj = false;
+		if(foundObj == true) markedObj = objPt;
+		foundObj = false;
 	    }
+	    else if(objPt->elip != NULL){
+		foundObj = true;
+		if(objPt->elip->center.x < pos1X - clipSize ||
+			objPt->elip->center.x > pos1X + clipSize) foundObj = false;
+		if(objPt->elip->center.y < pos1Y - clipSize ||
+			objPt->elip->center.y > pos1Y + clipSize) foundObj = false;
+		if(foundObj == true) markedObj = objPt;
 
-	    // Seleção da elipse
-	    // else if(){
-	    // }
-
-	    // Caso a seleção seja para o agrupamento
+		foundObj = true;
+		if(objPt->elip->center.x - objPt->elip->rx < pos1X - clipSize ||
+			objPt->elip->center.x - objPt->elip->rx > pos1X + clipSize) foundObj = false;
+		if(objPt->elip->center.y - objPt->elip->ry < pos1Y - clipSize ||
+			objPt->elip->center.y - objPt->elip->ry > pos1Y + clipSize) foundObj = false;
+		if(foundObj == true) markedObj = objPt;
+	    }
 	    if(markedObj == objPt && OPTION == 10){
 		markedObj = NULL;
 		if(objPt->marked == false) objPt->marked = true;
@@ -974,7 +1009,9 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     }
 }
 
-// Limpa as informações relativas ao mouse
+/**
+ * Limpa as informações relativas ao mouse
+ */
 void GLWidget::clearMouse(){
     click = false;
     pos1X = 0;
@@ -983,7 +1020,10 @@ void GLWidget::clearMouse(){
     pos2Y = 0;
 }
 
-// Salva todos os objetos em um arquivo
+/**
+ * Salva todos os objetos em um arquivo. Salva agrupamentos, mas o load não
+ * é capaz de carregá-los.
+ */
 void GLWidget::save(){
     ofstream save;
     obj* objPt;
@@ -1099,6 +1139,9 @@ void GLWidget::save(){
     save.close();
 }
 
+/**
+ * Salva no formato SVG.
+ */
 void GLWidget::saveSVG(){
     ofstream save;
     obj* objPt;
@@ -1252,7 +1295,9 @@ void GLWidget::saveSVG(){
     save.close();
 }
 
-// Carrega todos os objetos de um arquivo
+/**
+ * Carrega todos os objetos de um arquivo. Não funciona com agrupamentos.
+ */
 void GLWidget::load(){
     ifstream load;
     obj* objPt;
@@ -1265,6 +1310,12 @@ void GLWidget::load(){
     float aux;
     
     load.open("save.elv");
+    if(lastObj != NULL){
+	while(objPt != NULL){
+	    objPt = lastObj->previousObj;
+	    if(objPt != NULL) delete objPt->nextObj;
+	}
+    }
     objPt = firstObj;
     delete objPt;
     objPt = lastObj;
@@ -1350,7 +1401,6 @@ void GLWidget::load(){
 	    load >> s;
 	    cout << s << "\n";
 	}
-	printf("\nEND OF LOADING\n");
 	updateGL();
     }
 }
@@ -1431,7 +1481,9 @@ void GLWidget::delSelected(){
 }
 
 /**
- * Cria um novo agrupamento
+ * Cria um novo agrupamento. Agrupamento de agrupamentos não é possível.
+ * Ao invés de ser selecionável pelos objetos internos, é selecionado
+ * Pela borda do agrupamento.
  */
 void GLWidget::createGroup(){
     bool newGroup;
@@ -1448,7 +1500,7 @@ void GLWidget::createGroup(){
 
     while(objPt != NULL){
 	objPt2 = objPt->nextObj;
-	if(objPt->marked == true){
+	if(objPt->marked == true && objPt->group == NULL){
 	    objPt->marked = false;
 	    if(newGroup == false){
 		newGroup = true;
@@ -1508,7 +1560,7 @@ void GLWidget::createGroup(){
 		    linePt = linePt->nextLine;
 		}
 	    }
-	    // Tamanho dos retângulos e agrupamentos
+	    // Tamanho dos retângulos
 	    else if(objPt->rec != NULL){
 		recPt = objPt->rec;
 		if(recPt->v1.x < recPt->v3.x){
@@ -1552,7 +1604,7 @@ void GLWidget::createGroup(){
 }
 
 /**
- * Desfaz um agrupamento
+ * Desfaz um agrupamento. 
  */
 void GLWidget::undoGroup(){
     obj* objPt;
@@ -1569,7 +1621,6 @@ void GLWidget::undoGroup(){
 	    objPt = markedObj->endGroup;
 	    markedObj = markedObj->group;
 	    while(markedObj != objPt){
-		//decreaseLayer(0);
 		markedObj = markedObj->nextObj;
 	    }
 	}
@@ -1577,17 +1628,24 @@ void GLWidget::undoGroup(){
     clearMarkers();
 }
 
+/**
+ * Sinal do clique do mouse.
+ */
 void GLWidget::mouseClick(){
     emit mouseClicked();
 }
-
+/**
+ *   Sinal do movimento do mouse;
+ */
 void GLWidget::mouseMovement(){
     emit mouseMoved();
 }
 
 /**
- * Função de debug, mostra todos os objetos em uma lista no terminal
+ * Função de debug, mostra todos os objetos em uma lista no terminal.
+ * Não utilizado na versão final.
  */
+/*
 void GLWidget::objDebug(){
     obj* objPt;
     int count;
@@ -1633,6 +1691,7 @@ void GLWidget::objDebug(){
 	count++;
     }
 }
+*/
 
 /**
  * Transfere o objeto para uma camada superior
@@ -1701,8 +1760,9 @@ void GLWidget::decreaseLayer(int decValue){
 }
 
 /**
- * Função de captura de botões pressionados
+ * Função de captura de botões pressionados. Não é mais utilizado.
  */
+/*
 void GLWidget::keyPressEvent(QKeyEvent* event) {
     switch(event->key()) {
 	case Qt::Key_Escape:
@@ -1811,6 +1871,7 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 	    break;
     }
 }
+*/
 
 void GLWidget::drawPolyline() {
     OPTION=1;

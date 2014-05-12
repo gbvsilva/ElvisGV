@@ -52,10 +52,12 @@ public:
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
-        centralWidget->setMaximumSize(QSize(91, 431));
+        centralWidget->setMinimumSize(QSize(91, 421));
+        centralWidget->setMaximumSize(QSize(91, 421));
         label = new QLabel(centralWidget);
         label->setObjectName(QStringLiteral("label"));
         label->setGeometry(QRect(10, 10, 71, 41));
+        label->setMinimumSize(QSize(71, 41));
         label->setMaximumSize(QSize(71, 41));
         QFont font;
         font.setPointSize(11);
@@ -100,18 +102,18 @@ public:
 
         gridLayout->addWidget(centralWidget, 0, 0, 1, 1);
 
-        horizontalSpacer = new QSpacerItem(28, 20, QSizePolicy::Maximum, QSizePolicy::Minimum);
+        horizontalSpacer = new QSpacerItem(2, 20, QSizePolicy::Maximum, QSizePolicy::Minimum);
 
         gridLayout->addItem(horizontalSpacer, 0, 1, 1, 1);
 
         widget = new GLWidget(MainWindow);
         widget->setObjectName(QStringLiteral("widget"));
-        widget->setMinimumSize(QSize(775, 431));
+        widget->setMinimumSize(QSize(801, 451));
         widget->setStyleSheet(QStringLiteral(""));
 
         gridLayout->addWidget(widget, 0, 2, 2, 1);
 
-        verticalSpacer = new QSpacerItem(20, 28, QSizePolicy::Minimum, QSizePolicy::Maximum);
+        verticalSpacer = new QSpacerItem(20, 18, QSizePolicy::Minimum, QSizePolicy::Maximum);
 
         gridLayout->addItem(verticalSpacer, 1, 0, 1, 1);
 
