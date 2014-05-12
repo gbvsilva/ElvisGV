@@ -25,7 +25,7 @@ float zoom = 1;
 // Clique inicial
 bool click = false;
 // Clique para copia
-bool cp = false;
+bool cp = false, translation=false;
 // Valor necessário para corrigir o mouse
 int mouseH = 0;
 // Ponteiro da cabeça da lista encadeada
@@ -36,6 +36,7 @@ obj* lastObj = NULL;
 line* markedLine = NULL;
 line* markedLine2 = NULL;
 obj* markedObj = NULL;
+obj* copiedObj = NULL;
 
 GLWidget::GLWidget(QWidget *parent) : QGLWidget(parent)
 {
@@ -96,6 +97,7 @@ void GLWidget::paintGL() {
     rectangle* recPt;
     int gridSize; // Tamanho da grade
 
+
     gridSize = 40;
     objPt = firstObj;
     groupObj = NULL;
@@ -137,6 +139,7 @@ void GLWidget::paintGL() {
         circPt = objPt->c;
         elipPt = objPt->elip;
         recPt = objPt->rec;
+
         // Caso o objeto seja um grupo
         if(objPt->group != NULL){
             // Primeira passagem, desenhar todos os objetos do conjunto
@@ -196,7 +199,8 @@ void GLWidget::paintGL() {
                             (markedLine != NULL && markedLine == linePt) ||
                             (markedLine != NULL && markedLine == linePt->previousLine)){
                         drawSelSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5, 0);
-                    }
+                    }else if(copiedObj != NULL && copiedObj == objPt)
+                        drawSelSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5, 1);
                     // Caso ela não esteja em um grupo, marcação normal
                     else if(groupObj == NULL){
                         drawSquareMarker((linePt->v1.x - panX)*zoom, (linePt->v1.y - panY)*zoom, 5);
@@ -226,7 +230,12 @@ void GLWidget::paintGL() {
                 bresenham((recPt->v4.x - panX)*zoom, (recPt->v4.y - panY)*zoom,
                           (recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom);
                 // Caso esteja selecionado, marcação especial
-                if(markedObj != NULL && markedObj == objPt){
+                if(copiedObj != NULL && copiedObj == objPt) {
+                    drawSelSquareMarker((recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom, 5, 1);
+                    drawSelSquareMarker((recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom, 5, 1);
+                    drawSelSquareMarker((recPt->v3.x - panX)*zoom, (recPt->v3.y - panY)*zoom, 5, 1);
+                    drawSelSquareMarker((recPt->v4.x - panX)*zoom, (recPt->v4.y - panY)*zoom, 5, 1);
+                }else if(markedObj != NULL && markedObj == objPt){
                     drawSelSquareMarker((recPt->v1.x - panX)*zoom, (recPt->v1.y - panY)*zoom, 5, 0);
                     drawSelSquareMarker((recPt->v2.x - panX)*zoom, (recPt->v2.y - panY)*zoom, 5, 0);
                     drawSelSquareMarker((recPt->v3.x - panX)*zoom, (recPt->v3.y - panY)*zoom, 5, 0);
@@ -248,6 +257,10 @@ void GLWidget::paintGL() {
                     drawSelSquareMarker((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, 5, 0);
                     drawSelSquareMarker((circPt->center.x - panX + circPt->radius)*zoom, (circPt->center.y - panY)*zoom,  5, 0);
                 }
+                else if(copiedObj != NULL && copiedObj == objPt) {
+                    drawSelSquareMarker((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, 5, 1);
+                    drawSelSquareMarker((circPt->center.x - panX + circPt->radius)*zoom, (circPt->center.y - panY)*zoom,  5, 1);
+                }
                 // Caso contrário
                 else if(groupObj == NULL){
                     drawSquareMarker((circPt->center.x - panX)*zoom, (circPt->center.y - panY)*zoom, 5);
@@ -257,7 +270,13 @@ void GLWidget::paintGL() {
             // Desenho de elipse
             else if(elipPt != NULL) {
                 glColor3f(objPt->lineColor->r, objPt->lineColor->g, objPt->lineColor->b);
+                //midPtElipse(elipPt->center.x, elipPt->center.y, elipPt->rx, elipPt->ry);
                 midPtElipse((elipPt->center.x - panX)*zoom, (elipPt->center.y - panY)*zoom, (elipPt->rx - panX)*zoom, (elipPt->ry - panY)*zoom);
+
+                /*if(markedObj != NULL && markedObj == objPt) {
+                    drawSelSquareMarker((elipPt->center.x - panX)*zoom, (elipPt->center.y - panY)*zoom, 5, 0);
+                    drawSelSquareMarker((elipPt->center.x - panX + elipPt->radius)*zoom, (elipPt->center.y - panY)*zoom,  5, 0);
+                }*/
             }
             objPt = objPt->nextObj;
         }
@@ -362,7 +381,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                     lastObj->nextObj->previousObj = lastObj;
                     lastObj = lastObj->nextObj;
                 }
-
                 lastObj->elip = new elipse();
                 lastObj->elip->center.x=pos1X;
                 lastObj->elip->center.y=pos1Y;
@@ -371,7 +389,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                 pos2Y = (mouseH - event->y())/zoom + panY;
                 lastObj->elip->rx = pos2X - pos1X;
                 lastObj->elip->ry = pos2Y - pos1Y;
-                updateGL();
                 click=false;
             }
         }
@@ -619,7 +636,6 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
                         objPt->rec->v1.y > pos1Y + clipSize) foundLine = false;
                 if(foundLine == true) markedObj = objPt;
                 foundLine = false;
-
             }
 
             // Seleção da elipse
@@ -634,12 +650,29 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             }
             objPt = objPt->nextObj;
         }
-        if(markedObj != NULL && cp==true) {
-            OPTION=21;
-            click=true;
-            lastObj->nextObj = copy(markedObj);
-            lastObj->nextObj->previousObj = lastObj;
-            lastObj = lastObj->nextObj;
+        if(markedObj != NULL) {
+            if(cp==true) {
+                OPTION=21;
+                click=true;
+                lastObj->nextObj = copy(markedObj);
+                copiedObj = lastObj->nextObj;
+                lastObj->nextObj->previousObj = lastObj;
+                lastObj = lastObj->nextObj;
+            }else if(translation==true) {
+                lastObj->nextObj = copy(markedObj);
+                copiedObj = lastObj->nextObj;
+                lastObj->nextObj->previousObj = lastObj;
+                lastObj = lastObj->nextObj;
+                if(markedObj != firstObj) {
+                    markedObj->previousObj->nextObj = markedObj->nextObj;
+                    markedObj->nextObj->previousObj = markedObj->previousObj;
+                }else {
+                    firstObj = markedObj->nextObj;
+                    markedObj->nextObj->previousObj = NULL;
+                }
+                OPTION=21;
+                click=true;
+            }
         }
     }
     // Screen pan
@@ -659,6 +692,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     else if(OPTION == 21) {
         /* Observei que nao precisava do codigo aqui. Basta apenas parar a COPIA.*/
         cp=false;
+        translation=false;
         clearMouse();
         clearMarkers();
     }
@@ -669,6 +703,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
     mouseMovement();
     pos2X = event->x()/zoom + panX;
     pos2Y = (mouseH - event->y())/zoom + panY;
+
     if(click == true) {
         if(OPTION == 1) {
             lastObj->lastLine->v2.x = pos2X;
@@ -705,8 +740,6 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
             if(lastObj->c != NULL) {
                 lastObj->c->center.x = event->x() - (pos1X - markedObj->c->center.x);
                 lastObj->c->center.y = (mouseH - event->y()) - (pos1Y - markedObj->c->center.y);
-                //drawSelSquareMarker((lastObj->c->center.x - panX), (lastObj->c->center.y - panY), 5, 1);
-                //drawSelSquareMarker((lastObj->c->center.x - panX + lastObj->c->radius), (lastObj->c->center.y - panY), 5, 1);
             }else if(lastObj->rec != NULL) {
                 lastObj->rec->v1.x = event->x() - (pos1X - markedObj->rec->v1.x);
                 lastObj->rec->v1.y = (mouseH - event->y()) - (pos1Y - markedObj->rec->v1.y);
@@ -726,9 +759,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event) {
                     pt1->v2.y = (mouseH - event->y()) - (pos1Y - pt2->v2.y);
                     pt1 = pt1->nextLine; pt2 = pt2->nextLine;
                 }
-
             }
-
         }
         updateGL();
     }
@@ -746,6 +777,7 @@ void GLWidget::clearMarkers(){
     markedLine = NULL;
     markedLine2 = NULL;
     markedObj = NULL;
+    copiedObj = NULL;
 }
 
 void GLWidget::delSelected(){
@@ -1056,7 +1088,13 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
         printf("COPY\n");
         OPTION = 9;
         cp=true;
-        click=false;
+        clearMouse();
+        break;
+    case Qt::Key_T:
+        printf("Translation\n");
+        OPTION=9;
+        translation=true;
+        clearMouse();
         break;
     default:
         event->ignore();

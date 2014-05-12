@@ -318,7 +318,6 @@ void midPtElipse(int xc, int yc, int a, int b) {
     long int a2, b2, twoa2, twob2, foura2, fourb2, mx, my;
     long int d, mida, midb;
     int x, y;
-
     if(b < 0) b *= -1;
     x=0; y=b;
     a2=a*a; b2=b*b;
@@ -332,7 +331,7 @@ void midPtElipse(int xc, int yc, int a, int b) {
 
     void elipsePlotPts(int,int,int,int);
     // Regiao 1
-    while(d <= my) {
+    while(d < my) {
         elipsePlotPts(xc,yc,x,y);
         if(d > 0) {
             d = d - my;
