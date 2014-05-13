@@ -14,7 +14,23 @@ public slots:
     void drawRectangle();
     void drawEllipse();
     void editCopy();
+    void editDelete();
     void editTranslation();
+    void editSelection();
+    void editVertexSel();
+    void editPolySel();
+    void editCreateGroup();
+    void editDelGroup();
+    void editDecLayer();
+    void editIncLayer();
+    void viewGrid();
+    void viewZoomIn();
+    void viewZoomOut();
+    void viewPan();
+    void fileLoad();
+    void fileSave();
+    void fileSaveSVG();
+
 signals:
     void mouseClicked();
     void mouseMoved();
