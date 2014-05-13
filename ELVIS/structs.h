@@ -7,7 +7,7 @@
  */
 
 
-struct obj; // Protótipo por força maior
+struct obj;
 /**
  *  Vértice. Guarda coordenadas X e Y.
  */

@@ -62,7 +62,7 @@ void GLWidget::initializeGL() {
     glClearColor(1, 1, 1, 1);
 }
 /**
- * Redimensionamentoda janela e o plano de desenho (canvas)
+ * Redimensionamentoda janela e o plano de desenho (canvas).
  */
 void GLWidget::resizeGL(int w, int h) {
     mouseH = h;
@@ -76,7 +76,7 @@ void GLWidget::resizeGL(int w, int h) {
     screenW = w;
 }
 /**
- * Desenho do marcador de ponto de controle
+ * Desenho do marcador de ponto de controle.
  */
 void GLWidget::drawSquareMarker(float x, float y, int size){
     glColor3f(1, 0, 0);
@@ -87,7 +87,7 @@ void GLWidget::drawSquareMarker(float x, float y, int size){
 }
 /**
  * Desenho do marcador de ponto de controle especial,
- * Para seleções normais (color = 0) ou cópias (color = 1)
+ * Para seleções normais (color = 0) ou cópias (color = 1).
  */
 void GLWidget::drawSelSquareMarker(float x, float y, int size, int color){
     glColor3f(0, 0, 0);
@@ -145,7 +145,7 @@ void GLWidget::paintGL() {
 	for(int i = 0; i <= screenH/zoom; i+= gridSize)
 	    bresenham(0, (i - panY % gridSize)*zoom, screenW, (i - panY % gridSize)*zoom);
     }
-    /**
+    /*
      * Desenho de todos os objetos
      */
     while(objPt != NULL){
@@ -153,7 +153,7 @@ void GLWidget::paintGL() {
 	circPt = objPt->c;
 	elipPt = objPt->elip;
 	recPt = objPt->rec;
-	/**
+	/*
 	 * Retirada dos objetos de um agrupamento
 	 */
 	if(objPt->group != NULL){
@@ -345,7 +345,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     mouseClick();
     obj* objPt;
     line* linePt;
-    /**
+    /*
      * Criação de polilinha. Botão do meio para o desenho, botão da direita cancela.
      */
     if(OPTION == 1) {
@@ -405,11 +405,13 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 		lastObj->nextObj = NULL;
 	    }
 	    else firstObj = NULL;
-	    delete objPt;
+	    markedObj = objPt;
+		delSelected();
+		clearMarkers();
 	}
 	updateGL();
     }
-    /**
+    /*
      * Desenho de circunferência. Sem preenchimento.
      */
     else if(OPTION==2) {
@@ -446,7 +448,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    click=false;
 	}
     }
-    /**
+    /*
      * Desenho da elipse. Sem preenchimento
      */
     else if(OPTION==3) {
@@ -478,7 +480,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
             }
         }
     }
-    /**
+    /*
      * Desenho de retângulo
      */
     else if(OPTION == 4){
@@ -527,7 +529,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	clearMarkers();
 	updateGL();
     }
-    /**
+    /*
      * Criação de um novo vértice em uma polilinha. É necessário que esta linha tenha
      * sido selecionada anteriormente
      */
@@ -560,7 +562,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	clearMarkers();
 
     }
-    /**
+    /*
      * Seleção de vértices
      */
     else if(OPTION == 6){
@@ -667,7 +669,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
 	    objPt = objPt->nextObj;
 	}
     }
-    /**
+    /*
      * Seleção de uma linha da polilinha.
      *
      * Essa funcionalidade serve apenas para adicionar um vértice a uma polilinha
@@ -916,7 +918,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event) {
     updateGL();
 }
 
-/*
+/**
  *  Captura de movimento do mouse
  */
 void GLWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -1641,7 +1643,7 @@ void GLWidget::mouseMovement(){
     emit mouseMoved();
 }
 
-/**
+/*
  * Função de debug, mostra todos os objetos em uma lista no terminal.
  * Não utilizado na versão final.
  */
@@ -1759,7 +1761,7 @@ void GLWidget::decreaseLayer(int decValue){
     clearMarkers();
 }
 
-/**
+/*
  * Função de captura de botões pressionados. Não é mais utilizado.
  */
 /*
@@ -1873,32 +1875,50 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 }
 */
 
+/**
+ * Sinal de desenho de polilinha.
+ */
 void GLWidget::drawPolyline() {
     OPTION=1;
     clearMouse();
 }
 
+/**
+ * Sinal de desenho de circunferência.
+ */
 void GLWidget::drawCircle() {
     OPTION=2;
     clearMouse();
 }
 
+/**
+ * Sinal de desenho de elipse.
+ */
 void GLWidget::drawEllipse() {
     OPTION=3;
     clearMouse();
 }
 
+/**
+ * Sinal de desenho de retângulo.
+ */
 void GLWidget::drawRectangle() {
     OPTION=4;
     clearMouse();
 }
 
+/**
+ * Sinal de cópia de objeto.
+ */
 void GLWidget::editCopy() {
     cp=true;
     OPTION=9;
     clearMouse();
 }
 
+/**
+ * Sinal de translação de objeto.
+ */
 void GLWidget::editTranslation() {
     translation=true;
     OPTION=9;
