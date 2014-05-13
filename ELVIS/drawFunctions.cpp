@@ -5,6 +5,11 @@
 #include "drawFunctions.h"
 #define ROUND(a) ((int) (a+0.5))
 
+/**
+ *  Função de desenho bresenham
+ *  PS.: Essa é a mesma função enviada na segunda atividade, apenas
+ *  com 2 linhas corrigidas.
+ */
 void bresenham( int x1, int y1, int x2, int y2 ) {
     vertex p1, p2;
     long dist;
@@ -258,7 +263,9 @@ void bresenham( int x1, int y1, int x2, int y2 ) {
         }
     }
 }
-
+/**
+ * Desenho de circunferência
+ */
 void midPtCircle(int xc, int yc, int r) {
     int x=0;
     int y = r;
@@ -279,7 +286,9 @@ void midPtCircle(int xc, int yc, int r) {
     }
 }
 
-
+/**
+ *  Função auxiliar do desenho da circunferência 
+ */
 void circlePlotPoints(int x, int y, int xc, int yc) {
     glBegin(GL_POINTS);
     glVertex2i( xc + x, yc + y );
@@ -314,6 +323,9 @@ void circlePlotPoints(int x, int y, int xc, int yc) {
     glEnd( );
 }
 
+/**
+ * Desenho da elipse.
+ */
 void midPtElipse(int xc, int yc, int a, int b) {
     long int a2, b2, twoa2, twob2, foura2, fourb2, mx, my;
     long int d, mida, midb;
@@ -358,6 +370,9 @@ void midPtElipse(int xc, int yc, int a, int b) {
     }
 }
 
+/**
+ * Função auxiliar do desenho da elipse.
+ */
 void elipsePlotPts(int xc, int yc, int x, int y) {
     glBegin(GL_POINTS);
     glVertex2i(xc + x, yc + y);
